@@ -14,6 +14,19 @@ The system acts as a multi-tenant operational portal for real estate development
 
 ---
 
+## 🖼️ User Interface Screenshots
+
+### 1. Home Landing Page
+![Home Landing Page](docs/images/homepage.png)
+
+### 2. Authentication & Login Portal
+![Login Page](docs/images/login.png)
+
+### 3. ERP Dashboard Interface
+![Dashboard Interface](docs/images/dashboard.png)
+
+---
+
 ## 🏗️ Technology Stack & Architecture
 
 - **Backend Framework**: ASP.NET MVC 5 (.NET Framework 4.8)
