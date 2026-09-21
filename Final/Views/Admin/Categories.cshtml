@@ -1,0 +1,94 @@
+@model IEnumerable<Final.Models.MasterCategoryModel>
+@using System.Linq
+@{
+    ViewBag.Title = "Product Categories";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">Finishing Product Categories</h3>
+    <button type="button" class="btn-erp-primary" data-toggle="modal" data-target="#createCategoryModal">
+        <i class="ti ti-plus" aria-hidden="true"></i>
+        <span>New Category</span>
+    </button>
+</div>
+
+<div class="erp-card">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Category Name</th>
+                        <th>Customizable Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td style="font-weight: 600;">@c.CategoryName</td>
+                            <td>
+                                @(c.IsCustomizable ? Html.Raw("<span class='status-pill status-Approved'>Yes (Customizable)</span>") : Html.Raw("<span class='status-pill status-Inactive'>No (Structural/Standard)</span>"))
+                            </td>
+                            <td style="text-align: right;">
+                                @using (Html.BeginForm("DeleteCategory", "Admin", FormMethod.Post, new { style = "display: inline;", onsubmit = "return confirm('Are you sure you want to delete category ''" + c.CategoryName + "''?');" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="categoryId" value="@c.CategoryID" />
+                                    <button type="submit" class="btn-erp-danger" style="padding: 4px 10px; font-size: 12px;">
+                                        <i class="ti ti-trash" aria-hidden="true"></i> Delete
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-tags-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Categories Found</div>
+            <p style="margin: 0; font-size: 13px;">No master categories exist. Click "+ New Category" to define one.</p>
+        </div>
+    }
+</div>
+
+<div class="modal fade" id="createCategoryModal" tabindex="-1" role="dialog" aria-labelledby="createCategoryModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; overflow: hidden;">
+            <div class="modal-header" style="background-color: var(--primary); color: #fff; padding: 16px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff; opacity: 0.8;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCategoryModalLabel" style="font-size: 16px; font-weight: 700;">New Product Category</h4>
+            </div>
+            @using (Html.BeginForm("CreateCategory", "Admin", FormMethod.Post))
+            {
+                <div class="modal-body" style="padding: 24px;">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 6px;">Category Name</label>
+                        <input type="text" name="categoryName" class="form-control-erp" placeholder="e.g. Flooring Tiles, Sanitary Ware" required />
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" name="isCustomizable" value="true" id="isCustomizableCheckbox" style="width: 16px; height: 16px;" />
+                        <label for="isCustomizableCheckbox" style="font-weight: 600; font-size: 13px; color: var(--text-main); margin: 0;">Allow Client Customization</label>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px;">
+                    <button type="button" class="btn-erp-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-erp-primary">Create Category</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

@@ -1,0 +1,171 @@
+@model IEnumerable<Final.Models.CustomizationCatalogRow>
+@using System.Linq
+@{
+    ViewBag.Title = "Customization Catalog";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <div>
+        <h3 class="erp-card-title">Finishing Material Customization Catalog</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">
+            A product's Category and whether it is customizable is set automatically based on its MasterCategory. Admin sets extra costs per sq. ft. rate below.
+        </p>
+    </div>
+    <button type="button" class="btn-erp-primary" data-toggle="modal" data-target="#addProductModal">
+        <i class="ti ti-plus" aria-hidden="true"></i>
+        <span>Add Product</span>
+    </button>
+</div>
+
+<div class="erp-card">
+    @if (Model != null && Model.Any())
+    {
+        <div style="margin-bottom: 20px;">
+            <select id="catalogCategoryFilterDropdown" class="form-control-erp" style="max-width: 260px;">
+                <option value="">-- All Categories --</option>
+                @foreach (var categoryName in (System.Collections.Generic.List<string>)ViewBag.CategoryOptions)
+                {
+                    <option value="@categoryName">@categoryName</option>
+                }
+            </select>
+        </div>
+
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Product Specification</th>
+                        <th>Extra Cost Rate (Tk / SqFt)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr data-category="@p.CategoryName">
+                            <td style="font-weight: 600;">@p.ProductName@(string.IsNullOrEmpty(p.Description) ? "" : " - " + p.Description)</td>
+                            <td>
+                                @using (Html.BeginForm("UpdateExtraCost", "Admin", FormMethod.Post, new { style = "display: flex; gap: 8px; align-items: center;" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@p.ProductID" />
+                                    <input type="text" inputmode="decimal" name="extraCost" value="@p.ExtraCost.ToString("0.00")" class="form-control-erp numeric-only" style="max-width: 120px; padding: 4px 10px;" />
+                                    <button type="submit" class="btn-erp-primary" style="padding: 5px 14px; font-size: 12px;">Save</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-box-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Catalog Products</div>
+            <p style="margin: 0; font-size: 13px;">No finishing products exist. Use "+ Add Product" to populate the customization catalog.</p>
+        </div>
+    }
+</div>
+
+@Html.Partial("_AddProductModal", (Final.Models.AddProductViewModel)ViewData["AddProductModel"])
+
+@section scripts {
+    <script src="~/Scripts/numeric-input.js"></script>
+    <script>
+        $(function () {
+            var modalToOpen = '@ViewBag.OpenModalId';
+            if (modalToOpen) {
+                $('#' + modalToOpen).modal('show');
+            }
+        });
+    </script>
+    <script>
+        function syncExtraCostVisibility(checkbox) {
+            var row = checkbox.closest('.variant-row');
+            var group = row ? row.querySelector('.extra-cost-group') : null;
+            if (!group) { return; }
+            group.style.display = checkbox.checked ? '' : 'none';
+            if (!checkbox.checked) {
+                var input = group.querySelector('.extra-cost-input');
+                if (input) { input.value = ''; }
+            }
+        }
+
+        document.addEventListener('change', function (e) {
+            if (e.target.classList && e.target.classList.contains('has-extra-cost-checkbox')) {
+                syncExtraCostVisibility(e.target);
+            }
+        });
+
+        document.querySelectorAll('#addProductModal .has-extra-cost-checkbox').forEach(syncExtraCostVisibility);
+    </script>
+    <script>
+        (function () {
+            var modal = document.getElementById('addProductModal');
+            var container = document.getElementById('variantsContainer');
+            var template = document.getElementById('variantRowTemplate');
+            var addBtn = document.getElementById('addVariantBtn');
+
+            function renumberRows() {
+                var rows = container.querySelectorAll('.variant-row');
+                rows.forEach(function (row, index) {
+                    var label = row.querySelector('.variant-number');
+                    if (label) { label.textContent = 'Variant ' + (index + 1); }
+                    row.querySelectorAll('[name]').forEach(function (el) {
+                        el.name = el.name.replace(/Variants\[[^\]]*\]/, 'Variants[' + index + ']');
+                    });
+                });
+            }
+
+            if (addBtn && template && container) {
+                addBtn.addEventListener('click', function () {
+                    var newRow = template.cloneNode(true);
+                    newRow.removeAttribute('id');
+                    newRow.style.display = '';
+                    container.appendChild(newRow);
+                    renumberRows();
+                });
+
+                container.addEventListener('click', function (e) {
+                    if (e.target.classList.contains('btn-remove-variant')) {
+                        var row = e.target.closest('.variant-row');
+                        if (row) {
+                            container.removeChild(row);
+                            renumberRows();
+                        }
+                    }
+                });
+            }
+
+            if (modal) {
+                $(modal).on('hidden.bs.modal', function () {
+                    var rows = container.querySelectorAll('.variant-row');
+                    for (var i = rows.length - 1; i > 0; i--) { container.removeChild(rows[i]); }
+                    modal.querySelector('select[name="CategoryID"]').value = '';
+                    modal.querySelectorAll('#variantsContainer textarea, #variantsContainer .extra-cost-input').forEach(function (el) { el.value = ''; });
+                    modal.querySelectorAll('#variantsContainer .has-extra-cost-checkbox').forEach(function (el) {
+                        el.checked = false;
+                        syncExtraCostVisibility(el);
+                    });
+                    modal.querySelectorAll('.text-danger').forEach(function (el) { el.textContent = ''; });
+                });
+            }
+        })();
+    </script>
+    <script>
+        function applyCatalogFilters() {
+            var categoryFilter = document.getElementById('catalogCategoryFilterDropdown').value;
+            var rows = document.querySelectorAll('table.req-table tbody tr');
+            rows.forEach(function (row) {
+                var matchesCategory = categoryFilter === '' || row.getAttribute('data-category') === categoryFilter;
+                row.style.display = matchesCategory ? '' : 'none';
+            });
+        }
+        var catalogCategoryFilterDropdownEl = document.getElementById('catalogCategoryFilterDropdown');
+        if (catalogCategoryFilterDropdownEl) {
+            catalogCategoryFilterDropdownEl.addEventListener('change', applyCatalogFilters);
+        }
+    </script>
+}

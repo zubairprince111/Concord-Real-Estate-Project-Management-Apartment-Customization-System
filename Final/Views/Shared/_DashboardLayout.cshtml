@@ -1,0 +1,265 @@
+@{
+    string userRole = Session["UserRole"] != null ? Session["UserRole"].ToString() : "";
+    string fullName = Session["FullName"] != null ? Session["FullName"].ToString() : "User";
+    string currentController = ViewContext.RouteData.Values["controller"] != null ? ViewContext.RouteData.Values["controller"].ToString() : "";
+    string currentAction = ViewContext.RouteData.Values["action"] != null ? ViewContext.RouteData.Values["action"].ToString() : "";
+    
+    string userInitials = "C";
+    if (!string.IsNullOrWhiteSpace(fullName))
+    {
+        var parts = fullName.Trim().Split(' ');
+        if (parts.Length > 1 && parts[0].Length > 0 && parts[1].Length > 0)
+        {
+            userInitials = ("" + parts[0][0] + parts[1][0]).ToUpper();
+        }
+        else if (parts[0].Length > 0)
+        {
+            userInitials = ("" + parts[0][0]).ToUpper();
+        }
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewBag.Title ?? "Dashboard") - Concord ERP</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/no-spinner.css" rel="stylesheet" />
+    <link rel="stylesheet" href="@("https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css")">
+    <link href="~/Content/dashboard.css" rel="stylesheet" />
+    @RenderSection("styles", required: false)
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="dashboard-sidebar" id="dashboardSidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="ti ti-building" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h1 class="brand-title">CONCORD</h1>
+                    <div class="brand-subtitle">Real Estate ERP</div>
+                </div>
+            </div>
+            
+            <ul class="sidebar-nav">
+                <li class="nav-section-label">Main Navigation</li>
+                
+                @if (userRole == "Admin")
+                {
+                    <li class="nav-item">
+                        <a href="@Url.Action("AdminDashboard", "Dashboard")" class="nav-link-item @(currentController == "Dashboard" ? "active" : "")">
+                            <i class="ti ti-dashboard" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Project")" class="nav-link-item @(currentController == "Project" ? "active" : "")">
+                            <i class="ti ti-briefcase" aria-hidden="true"></i>
+                            <span>Projects</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Building")" class="nav-link-item @(currentController == "Building" ? "active" : "")">
+                            <i class="ti ti-building-skyscraper" aria-hidden="true"></i>
+                            <span>Buildings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Unit")" class="nav-link-item @(currentController == "Unit" ? "active" : "")">
+                            <i class="ti ti-home" aria-hidden="true"></i>
+                            <span>Units</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Users", "Admin")" class="nav-link-item @(currentController == "Admin" && currentAction == "Users" ? "active" : "")">
+                            <i class="ti ti-users" aria-hidden="true"></i>
+                            <span>Users</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Bookings", "Admin")" class="nav-link-item @(currentController == "Admin" && currentAction == "Bookings" ? "active" : "")">
+                            <i class="ti ti-calendar-event" aria-hidden="true"></i>
+                            <span>Bookings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("CustomizationCatalog", "Admin")" class="nav-link-item @(currentController == "Admin" && currentAction == "CustomizationCatalog" ? "active" : "")">
+                            <i class="ti ti-adjustments" aria-hidden="true"></i>
+                            <span>Customization</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Categories", "Admin")" class="nav-link-item @(currentController == "Admin" && currentAction == "Categories" ? "active" : "")">
+                            <i class="ti ti-tags" aria-hidden="true"></i>
+                            <span>Product Categories</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Assigned", "Admin")" class="nav-link-item @(currentController == "Admin" && currentAction == "Assigned" ? "active" : "")">
+                            <i class="ti ti-user-check" aria-hidden="true"></i>
+                            <span>Assigned</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Reports", "Admin")" class="nav-link-item @(currentController == "Admin" && currentAction == "Reports" ? "active" : "")">
+                            <i class="ti ti-report-analytics" aria-hidden="true"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                }
+                else if (userRole == "Accounts Officer")
+                {
+                    <li class="nav-item">
+                        <a href="@Url.Action("AccountsOfficerDashboard", "Dashboard")" class="nav-link-item @(currentController == "Dashboard" ? "active" : "")">
+                            <i class="ti ti-dashboard" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Project")" class="nav-link-item @(currentController == "Project" ? "active" : "")">
+                            <i class="ti ti-briefcase" aria-hidden="true"></i>
+                            <span>Projects</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("ClientPayments", "Accounts")" class="nav-link-item @(currentController == "Accounts" && currentAction == "ClientPayments" ? "active" : "")">
+                            <i class="ti ti-receipt" aria-hidden="true"></i>
+                            <span>Client Payments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Ledger", "Accounts")" class="nav-link-item @(currentController == "Accounts" && currentAction == "Ledger" ? "active" : "")">
+                            <i class="ti ti-report-analytics" aria-hidden="true"></i>
+                            <span>Project Ledger</span>
+                        </a>
+                    </li>
+                }
+                else if (userRole == "Project Manager")
+                {
+                    <li class="nav-item">
+                        <a href="@Url.Action("ProjectManagerDashboard", "Dashboard")" class="nav-link-item @(currentController == "Dashboard" ? "active" : "")">
+                            <i class="ti ti-dashboard" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Project")" class="nav-link-item @(currentController == "Project" ? "active" : "")">
+                            <i class="ti ti-briefcase" aria-hidden="true"></i>
+                            <span>Projects</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Building")" class="nav-link-item @(currentController == "Building" ? "active" : "")">
+                            <i class="ti ti-building-skyscraper" aria-hidden="true"></i>
+                            <span>Buildings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Unit")" class="nav-link-item @(currentController == "Unit" ? "active" : "")">
+                            <i class="ti ti-home" aria-hidden="true"></i>
+                            <span>Units</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Approval")" class="nav-link-item @(currentController == "Approval" ? "active" : "")">
+                            <i class="ti ti-clipboard-check" aria-hidden="true"></i>
+                            <span>Customization Approvals</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "MaterialAssignment")" class="nav-link-item @(currentController == "MaterialAssignment" ? "active" : "")">
+                            <i class="ti ti-box" aria-hidden="true"></i>
+                            <span>Material Assignment</span>
+                        </a>
+                    </li>
+                }
+                else if (userRole == "Client")
+                {
+                    <li class="nav-item">
+                        <a href="@Url.Action("ClientDashboard", "Dashboard")" class="nav-link-item @(currentController == "Dashboard" ? "active" : "")">
+                            <i class="ti ti-dashboard" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Units", "Client")" class="nav-link-item @(currentController == "Client" && currentAction == "Units" ? "active" : "")">
+                            <i class="ti ti-home-2" aria-hidden="true"></i>
+                            <span>Available Units</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("MyBookings", "Client")" class="nav-link-item @(currentController == "Client" && currentAction == "MyBookings" ? "active" : "")">
+                            <i class="ti ti-palette" aria-hidden="true"></i>
+                            <span>My Bookings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="@Url.Action("Payments", "Client")" class="nav-link-item @(currentController == "Client" && currentAction == "Payments" ? "active" : "")">
+                            <i class="ti ti-receipt" aria-hidden="true"></i>
+                            <span>Payment History</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="dashboard-main">
+            <!-- Topbar Header -->
+            <header class="dashboard-topbar">
+                <div class="topbar-left">
+                    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar">
+                        <i class="ti ti-menu-2" aria-hidden="true"></i>
+                    </button>
+                    <h2 class="topbar-page-title">@(ViewBag.Title ?? "Dashboard")</h2>
+                </div>
+                <div class="topbar-right">
+                    <div class="user-profile-badge">
+                        <div class="user-avatar-circle">@userInitials</div>
+                        <span class="user-name-text">@fullName</span>
+                        <span class="role-pill-badge">@userRole</span>
+                    </div>
+                    <a href="@Url.Action("Logout", "Account")" class="btn-logout-link">
+                        <i class="ti ti-logout" aria-hidden="true"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="dashboard-content">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert-erp alert-erp-success">
+                        <i class="ti ti-circle-check" aria-hidden="true"></i>
+                        <span>@TempData["Success"]</span>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert-erp alert-erp-danger">
+                        <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                        <span>@TempData["Error"]</span>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script>
+        $(function () {
+            $('#sidebarToggleBtn').on('click', function () {
+                $('#dashboardSidebar').toggleClass('show-mobile');
+            });
+        });
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

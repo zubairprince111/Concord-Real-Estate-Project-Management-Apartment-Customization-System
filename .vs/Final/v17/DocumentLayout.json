@@ -1,0 +1,69 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\IT_SHOP\\Desktop\\Defense 2\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{02E5650D-2C99-49E7-959F-CF4C9F71380C}|Final\\Final.csproj|c:\\users\\it_shop\\desktop\\defense 2\\final\\controllers\\accountscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{02E5650D-2C99-49E7-959F-CF4C9F71380C}|Final\\Final.csproj|solutionrelative:final\\controllers\\accountscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{02E5650D-2C99-49E7-959F-CF4C9F71380C}|Final\\Final.csproj|C:\\Users\\IT_SHOP\\Desktop\\Defense 2\\final\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{02E5650D-2C99-49E7-959F-CF4C9F71380C}|Final\\Final.csproj|solutionrelative:final\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{02E5650D-2C99-49E7-959F-CF4C9F71380C}|Final\\Final.csproj|C:\\Users\\IT_SHOP\\Desktop\\Defense 2\\final\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{02E5650D-2C99-49E7-959F-CF4C9F71380C}|Final\\Final.csproj|solutionrelative:final\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AccountsController.cs",
+              "DocumentMoniker": "C:\\Users\\IT_SHOP\\Desktop\\Defense 2\\Final\\Controllers\\AccountsController.cs",
+              "RelativeDocumentMoniker": "Final\\Controllers\\AccountsController.cs",
+              "ToolTip": "C:\\Users\\IT_SHOP\\Desktop\\Defense 2\\Final\\Controllers\\AccountsController.cs",
+              "RelativeToolTip": "Final\\Controllers\\AccountsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-20T08:48:25.163Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AccountController.cs",
+              "DocumentMoniker": "C:\\Users\\IT_SHOP\\Desktop\\Defense 2\\Final\\Controllers\\AccountController.cs",
+              "RelativeDocumentMoniker": "Final\\Controllers\\AccountController.cs",
+              "ToolTip": "C:\\Users\\IT_SHOP\\Desktop\\Defense 2\\Final\\Controllers\\AccountController.cs",
+              "RelativeToolTip": "Final\\Controllers\\AccountController.cs",
+              "ViewState": "AgIAAFQAAACAy8zMzMwqwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-20T08:48:05.678Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "HomeController.cs",
+              "DocumentMoniker": "C:\\Users\\IT_SHOP\\Desktop\\Defense 2\\Final\\Controllers\\HomeController.cs",
+              "RelativeDocumentMoniker": "Final\\Controllers\\HomeController.cs",
+              "ToolTip": "C:\\Users\\IT_SHOP\\Desktop\\Defense 2\\Final\\Controllers\\HomeController.cs",
+              "RelativeToolTip": "Final\\Controllers\\HomeController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-20T03:14:16.316Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

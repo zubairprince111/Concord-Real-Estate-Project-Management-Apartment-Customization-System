@@ -1,0 +1,796 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Concord Real Estate Development</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar */
+        .navbar-public {
+            height: clamp(60px, 8vh, 80px);
+            padding: 0 clamp(20px, 4vw, 50px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: absolute;
+            top: clamp(10px, 2vh, 24px);
+            left: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .navbar-public .logo { display: block; height: clamp(36px, 5vh, 50px); }
+        .navbar-public .logo img { height: 100%; object-fit: contain; filter: brightness(0) invert(1); }
+
+        .navbar-public .nav-links {
+            display: flex;
+            align-items: center;
+            gap: clamp(20px, 3vw, 40px);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .navbar-public .nav-links a {
+            color: #fff;
+            font-weight: 500;
+            font-size: clamp(13px, 1.8vh, 15px);
+            text-decoration: none;
+            position: relative;
+            padding: 5px 0;
+            transition: color 0.3s;
+        }
+
+        .navbar-public .nav-links a.active::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #fff;
+        }
+
+        .navbar-public .nav-links a:hover {
+            color: #e2e8f0;
+        }
+        
+        .login-btn-container {
+            margin-left: auto;
+        }
+        
+        .login-btn {
+            background: linear-gradient(180deg, #33598A 0%, #1F3A5F 100%);
+            box-shadow: 0 6px 15px rgba(31, 58, 95, 0.4), inset 0 2px 2px rgba(255, 255, 255, 0.2);
+            border: 1px solid #112240;
+            color: #fff !important;
+            padding: clamp(7px, 1.2vh, 10px) clamp(16px, 2vw, 24px) !important;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(13px, 1.8vh, 15px);
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        .login-btn:hover {
+            background: linear-gradient(180deg, #3D6AA3 0%, #264673 100%);
+            box-shadow: 0 8px 20px rgba(31, 58, 95, 0.6), inset 0 2px 2px rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            color: #fff !important;
+            text-decoration: none !important;
+        }
+
+        /* Hero Section */
+        .hero {
+            flex: 1;
+            position: relative;
+            background-image: linear-gradient(to right, rgba(17, 34, 64, 0.95) 0%, rgba(17, 34, 64, 0.7) 45%, rgba(17, 34, 64, 0) 75%), url('@Url.Content("~/hero (2).png")');
+            background-size: cover;
+            background-position: center;
+            padding: clamp(75px, 10vh, 95px) clamp(24px, 4.5vw, 50px) 0;
+            color: #fff;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .hero-content {
+            max-width: clamp(520px, 52vw, 650px);
+            position: relative;
+            z-index: 2;
+            margin-top: clamp(50px, 10.5vh, 125px);
+        }
+
+        .hero h4 {
+            font-size: clamp(12.5px, 1.6vh, 14px);
+            font-weight: 500;
+            letter-spacing: 2px;
+            margin-bottom: clamp(6px, 1.2vh, 12px);
+            color: #d7e4f2;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: clamp(40px, 6.2vh, 64px);
+            font-weight: 800;
+            line-height: 1.1;
+            margin: 0 0 clamp(8px, 1.6vh, 16px);
+            letter-spacing: -1.5px;
+            color: #fff;
+        }
+        
+        .hero h1 .highlight {
+            color: #F1C40F;
+        }
+
+        .hero p {
+            font-size: clamp(15px, 2.3vh, 18px);
+            color: #e2e8f0;
+            line-height: 1.45;
+            margin-bottom: clamp(16px, 2.8vh, 32px);
+            max-width: 550px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: clamp(12px, 1.6vw, 16px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(180deg, #33598A 0%, #1F3A5F 100%);
+            box-shadow: 0 6px 15px rgba(31, 58, 95, 0.4), inset 0 2px 2px rgba(255, 255, 255, 0.2);
+            border: 1px solid #112240;
+            color: #fff;
+            padding: clamp(10px, 1.8vh, 14px) clamp(20px, 2.4vw, 28px);
+            font-weight: 600;
+            border-radius: 6px;
+            font-size: clamp(14px, 2.1vh, 16px);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(180deg, #3D6AA3 0%, #264673 100%);
+            box-shadow: 0 8px 20px rgba(31, 58, 95, 0.6), inset 0 2px 2px rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            color: #fff;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: #fff;
+            border: 1px solid #fff;
+            padding: clamp(10px, 1.8vh, 13px) clamp(20px, 2.4vw, 28px);
+            font-weight: 500;
+            border-radius: 6px;
+            font-size: clamp(14px, 2.1vh, 16px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        
+        /* Hero Stats */
+        .hero-stats {
+            display: flex;
+            gap: clamp(20px, 3vw, 40px);
+            margin-top: clamp(22px, 4vh, 45px);
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: clamp(10px, 1.4vw, 16px);
+        }
+        .stat-icon {
+            font-size: clamp(22px, 3.4vh, 28px);
+            color: #fff;
+        }
+        .stat-text h5 {
+            margin: 0 0 2px 0;
+            color: #fff;
+            font-size: clamp(17px, 2.8vh, 20px);
+            font-weight: 700;
+        }
+        .stat-text p {
+            margin: 0;
+            color: #d7e4f2;
+            font-size: clamp(12px, 1.7vh, 13px);
+        }
+        
+        .hero-script {
+            position: absolute;
+            right: clamp(24px, 4vw, 80px);
+            top: clamp(75px, 12vh, 15vh);
+            font-family: 'Caveat', cursive;
+            font-size: clamp(32px, 5vh, 48px);
+            color: #fff;
+            transform: rotate(-5deg);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+        .hero-script::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            right: 0px;
+            width: 100%;
+            height: 3px;
+            background-color: #F1C40F;
+            border-radius: 2px;
+            transform: rotate(-2deg);
+        }
+
+        /* Roles Cards */
+        .roles-container {
+            position: absolute;
+            bottom: clamp(24px, 4.5vh, 60px);
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: clamp(8px, 1.4vw, 20px);
+            padding: 0 clamp(16px, 3vw, 40px);
+            z-index: 10;
+        }
+
+        .role-card {
+            background-color: rgba(255, 255, 255, 0.5); /* 50% transparent */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: clamp(10px, 1.6vh, 20px);
+            flex: 1;
+            max-width: 280px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: flex-start;
+            gap: clamp(10px, 1.2vw, 16px);
+            text-decoration: none !important;
+            position: relative;
+        }
+
+        .role-icon {
+            width: clamp(34px, 4.5vh, 44px);
+            height: clamp(34px, 4.5vh, 44px);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(16px, 2.2vh, 20px);
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .icon-blue { background: #e0f2fe; color: #0284c7; }
+        .icon-green { background: #dcfce7; color: #16a34a; }
+        .icon-orange { background: #ffedd5; color: #ea580c; }
+        .icon-purple { background: #f3e8ff; color: #9333ea; }
+
+        .role-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .role-card h3 {
+            color: #1F3A5F;
+            font-size: clamp(13.5px, 1.8vh, 16px);
+            font-weight: 700;
+            margin: 0 0 2px 0;
+            letter-spacing: -0.3px;
+        }
+
+        .role-card p {
+            color: #64748b;
+            font-size: clamp(11px, 1.4vh, 13px);
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .role-btn {
+            position: absolute;
+            bottom: clamp(10px, 1.6vh, 20px);
+            right: clamp(10px, 1.6vh, 20px);
+            width: clamp(22px, 3vh, 28px);
+            height: clamp(22px, 3vh, 28px);
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            color: #007bff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(10px, 1.4vh, 12px);
+            transition: all 0.3s;
+        }
+
+        .role-card:hover .role-btn {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        /* Footer Overlay */
+        .footer-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: clamp(4px, 0.8vh, 8px) clamp(20px, 4vw, 50px);
+            display: flex;
+            justify-content: space-between;
+            color: rgba(255,255,255,0.7);
+            font-size: clamp(10px, 1.3vh, 11px);
+            z-index: 5;
+        }
+
+
+
+        /* Chat Widget */
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 30px;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background-color: #1F3A5F;
+            color: #fff;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+        .chat-toggle-btn::before {
+            content: 'Need help?';
+            position: absolute;
+            right: 70px;
+            background: #fff;
+            color: #333;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        .chat-panel.open ~ .chat-toggle-btn::before {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .chat-toggle-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .chat-panel {
+            position: fixed;
+            bottom: 90px;
+            right: 30px;
+            width: 340px;
+            max-height: calc(100vh - 120px);
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+        .chat-panel.open {
+            display: flex;
+        }
+
+        .chat-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+        }
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            background-color: #1F3A5F;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #F1C40F;
+            font-size: 16px;
+        }
+        .chat-title-group h4 {
+            margin: 0;
+            color: #1F3A5F;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .chat-title-group p {
+            margin: 2px 0 0;
+            color: #6c757d;
+            font-size: 11px;
+        }
+        .chat-close {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #6c757d;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            flex: 1;
+            height: 200px;
+            overflow-y: auto;
+            padding: 16px;
+            background-color: #f8f9fa;
+        }
+
+        .chat-msg {
+            margin-bottom: 12px;
+            line-height: 1.4;
+            font-size: 13px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .chat-msg.bot {
+            background-color: #fff;
+            color: #333;
+            padding: 10px 14px;
+            border-radius: 12px 12px 12px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            align-self: flex-start;
+        }
+        
+        .chat-msg.user {
+            background-color: #1F3A5F;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 12px 12px 0 12px;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .chat-msg.error {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px 14px;
+            border-radius: 12px;
+        }
+        
+        .chat-quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 12px;
+            padding: 0 16px 8px;
+            background-color: #f8f9fa;
+        }
+        .quick-action-btn {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1F3A5F;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: left;
+        }
+        .quick-action-btn:hover {
+            background-color: #f0f4f8;
+        }
+        .quick-action-btn i {
+            color: #3498db;
+            width: 14px;
+            text-align: center;
+        }
+
+        .chat-input-row {
+            display: flex;
+            padding: 10px 16px;
+            background-color: #fff;
+            border-top: 1px solid #eee;
+            align-items: center;
+        }
+        .chat-input-row input {
+            flex: 1;
+            border: none;
+            padding: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .chat-input-row button {
+            background-color: #1F3A5F;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Footer */
+        .footer {
+            flex-shrink: 0;
+            padding: 16px 50px;
+            background-color: #fff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        .footer-tagline {
+            font-style: italic;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="navbar-public">
+        <a href="@Url.Action("Index", "Home")" class="logo">
+            <img src="@Url.Content("~/images.png")" alt="Concord Logo" />
+        </a>
+        <div class="nav-links">
+            <a href="@Url.Action("Index", "Home")" class="active">Home</a>
+            <a href="@Url.Action("About", "Home")">About</a>
+            <a href="@Url.Action("Contact", "Home")">Contact</a>
+        </div>
+        <div class="login-btn-container">
+            <a href="@Url.Action("Login", "Account")" class="login-btn"><i class="fas fa-user"></i> Login</a>
+        </div>
+    </div>
+
+    <div class="hero">
+        <div class="hero-content">
+            <h4>WELCOME TO CONCORD</h4>
+            <h1>Real Estate<br><span class="highlight">Made Simple</span></h1>
+            <p>
+                Manage bookings, customizations, payments, and project updates &mdash; all in one place.
+            </p>
+            <div class="hero-buttons">
+                <a href="@Url.Action("About", "Home")" class="btn-primary">Explore Concord <i class="fas fa-arrow-right"></i></a>
+                <a href="@Url.Action("Login", "Account")" class="btn-secondary"><i class="fas fa-user"></i> Login to Dashboard</a>
+            </div>
+            
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-building"></i></div>
+                    <div class="stat-text">
+                        <h5>1,200+</h5>
+                        <p>Projects</p>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-text">
+                        <h5>5,000+</h5>
+                        <p>Happy Clients</p>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="stat-text">
+                        <h5>100%</h5>
+                        <p>Secure & Reliable</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-script">
+            Building<br>Better<br>Tomorrows
+        </div>
+
+    <div class="roles-container">
+        <a href="@Url.Action("Login", "Account")" class="role-card">
+            <div class="role-icon icon-blue">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div class="role-info">
+                <h3>Client</h3>
+                <p>Bookings & payments</p>
+            </div>
+            <div class="role-btn"><i class="fas fa-arrow-right"></i></div>
+        </a>
+        
+        <a href="@Url.Action("Login", "Account")" class="role-card">
+            <div class="role-icon icon-green">
+                <i class="fas fa-hard-hat"></i>
+            </div>
+            <div class="role-info">
+                <h3>Project Manager</h3>
+                <p>Projects & approvals</p>
+            </div>
+            <div class="role-btn"><i class="fas fa-arrow-right"></i></div>
+        </a>
+        
+        <a href="@Url.Action("Login", "Account")" class="role-card">
+            <div class="role-icon icon-orange">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div class="role-info">
+                <h3>Accounts</h3>
+                <p>Payments & invoices</p>
+            </div>
+            <div class="role-btn"><i class="fas fa-arrow-right"></i></div>
+        </a>
+        
+        <a href="@Url.Action("Login", "Account")" class="role-card">
+            <div class="role-icon icon-purple">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div class="role-info">
+                <h3>Admin</h3>
+                <p>Users & system</p>
+            </div>
+            <div class="role-btn"><i class="fas fa-arrow-right"></i></div>
+        </a>
+    </div>
+
+    <div class="footer-overlay">
+        <div>&copy; 2026 Concord. All rights reserved.</div>
+        <div>Developing Communities for a Brighter Tomorrow</div>
+    </div>
+    </div>
+
+
+    <button type="button" class="chat-toggle-btn" id="chatToggleBtn"><i class="fas fa-comment-dots"></i></button>
+
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-avatar"><i class="fas fa-building"></i></div>
+                <div class="chat-title-group">
+                    <h4>Concord Assistant</h4>
+                    <p>How can I help you today?</p>
+                </div>
+            </div>
+            <button class="chat-close" id="chatCloseBtn"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg bot">Hello! &#128075;<br>I'm Concord Assistant. How can I help you today?</div>
+        </div>
+        
+        <div class="chat-quick-actions" id="chatQuickActions">
+            <button class="quick-action-btn" data-text="Browse Projects"><i class="fas fa-building"></i> Browse Projects</button>
+            <button class="quick-action-btn" data-text="Check Available Units"><i class="fas fa-home"></i> Check Available Units</button>
+            <button class="quick-action-btn" data-text="Payment Information"><i class="fas fa-credit-card"></i> Payment Information</button>
+            <button class="quick-action-btn" data-text="Contact Support"><i class="fas fa-headset"></i> Contact Support</button>
+        </div>
+
+        <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off" />
+            <button type="button" id="chatSendBtn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var toggleBtn = document.getElementById('chatToggleBtn');
+            var closeBtn = document.getElementById('chatCloseBtn');
+            var panel = document.getElementById('chatPanel');
+            var messages = document.getElementById('chatMessages');
+            var input = document.getElementById('chatInput');
+            var sendBtn = document.getElementById('chatSendBtn');
+            var quickActions = document.querySelectorAll('.quick-action-btn');
+            var quickActionsContainer = document.getElementById('chatQuickActions');
+
+            function toggleChat() {
+                panel.classList.toggle('open');
+                if (panel.classList.contains('open')) {
+                    input.focus();
+                }
+            }
+
+            toggleBtn.addEventListener('click', toggleChat);
+            closeBtn.addEventListener('click', toggleChat);
+
+            function addMessage(text, cssClass) {
+                var div = document.createElement('div');
+                div.className = 'chat-msg ' + cssClass;
+                div.innerHTML = text; // Allow HTML for line breaks if needed
+                messages.appendChild(div);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            function sendMessage(textParam) {
+                var text = typeof textParam === 'string' ? textParam : input.value.trim();
+                if (!text) return;
+
+                // Hide quick actions once conversation starts
+                if (quickActionsContainer.style.display !== 'none') {
+                    quickActionsContainer.style.display = 'none';
+                }
+
+                addMessage(text, 'user');
+                input.value = '';
+                sendBtn.disabled = true;
+
+                fetch('@Url.Action("Chat", "Home")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'message=' + encodeURIComponent(text)
+                })
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) {
+                        if (data.error) {
+                            addMessage(data.error, 'error');
+                        } else {
+                            addMessage(data.reply, 'bot');
+                        }
+                    })
+                    .catch(function () {
+                        addMessage('Sorry, something went wrong. Please try again later.', 'error');
+                    })
+                    .finally(function () {
+                        sendBtn.disabled = false;
+                    });
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            // Quick actions click handlers
+            quickActions.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    sendMessage(this.getAttribute('data-text'));
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+@model IEnumerable<Final.Models.ClientBookingModel>
+@using System.Linq
+@{
+    ViewBag.Title = "Client Payments";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">Client Installment Payments & Collections</h3>
+</div>
+
+<div class="erp-card">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Booking #</th>
+                        <th>Project</th>
+                        <th>Building</th>
+                        <th>Flat #</th>
+                        <th>Client Name</th>
+                        <th>Total Price</th>
+                        <th>Paid Amount</th>
+                        <th>Due Balance</th>
+                        <th>Record Installment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model)
+                    {
+                        <tr>
+                            <td style="font-weight: 700;">#@b.BookingID</td>
+                            <td style="font-weight: 600;">@b.ProjectName</td>
+                            <td>@b.BuildingName</td>
+                            <td>@b.FlatNumber</td>
+                            <td>@b.ClientName</td>
+                            <td style="font-weight: 600;">Tk @b.TotalPrice.ToString("N2")</td>
+                            <td style="font-weight: 600; color: #16a34a;">Tk @b.TotalPaid.ToString("N2")</td>
+                            <td>
+                                <span class="status-pill @(b.Balance > 0 ? "status-Pending" : "status-Active")">
+                                    Tk @b.Balance.ToString("N2")
+                                </span>
+                            </td>
+                            <td>
+                                @using (Html.BeginForm("RecordClientPayment", "Accounts", FormMethod.Post, new { style = "display: flex; gap: 6px; align-items: center;" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="bookingId" value="@b.BookingID" />
+                                    <input type="text" inputmode="decimal" name="amount" placeholder="Amount (Tk)" class="form-control-erp numeric-only" style="width: 120px; padding: 4px 10px;" required />
+                                    <button type="submit" class="btn-erp-primary" style="padding: 5px 12px; font-size: 12px;">Record</button>
+                                }
+                            </td>
+                        </tr>
+                        <tr class="history-row" style="background-color: #f8fafc;">
+                            <td colspan="9" style="padding: 12px 18px 18px 18px;">
+                                @if (b.Selections.Any())
+                                {
+                                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                                        <i class="ti ti-info-circle" aria-hidden="true"></i> Customizations &mdash; only <strong>Approved</strong> choices are included in Total Price; Pending and Rejected choices are reference only.
+                                    </div>
+                                    <table class="erp-table" style="margin-bottom: 12px; font-size: 12.5px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                        <thead>
+                                            <tr style="background-color: #f1f5f9;">
+                                                <th style="padding: 8px 12px; font-size: 11px;">Customization Item</th>
+                                                <th style="padding: 8px 12px; font-size: 11px;">Extra Cost</th>
+                                                <th style="padding: 8px 12px; font-size: 11px;">Status</th>
+                                                <th style="padding: 8px 12px; font-size: 11px;">In Total Price?</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var sel in b.Selections)
+                                            {
+                                                <tr>
+                                                    <td style="padding: 6px 12px;">@sel.Name</td>
+                                                    <td style="padding: 6px 12px;">Tk @sel.Cost.ToString("N2")</td>
+                                                    <td style="padding: 6px 12px;"><span class="status-pill status-@sel.Status" style="font-size: 11px;">@sel.StatusLabel</span></td>
+                                                    <td style="padding: 6px 12px;">@(sel.IsBilled ? "Yes" : (sel.Status == "Approved" ? "Included (no extra cost)" : "No \u2014 not billed"))</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                                @if (b.Payments.Any())
+                                {
+                                    <div style="font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Payment Records History</div>
+                                    <table class="erp-table" style="font-size: 12.5px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                        <thead>
+                                            <tr style="background-color: #f1f5f9;">
+                                                <th style="padding: 8px 12px; font-size: 11px;">Payment Date</th>
+                                                <th style="padding: 8px 12px; font-size: 11px;">Amount Received</th>
+                                                <th style="padding: 8px 12px; font-size: 11px; text-align: right;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var pay in b.Payments)
+                                            {
+                                                <tr>
+                                                    <td style="padding: 6px 12px;">@pay.PaymentDate.ToString("dd MMM yyyy")</td>
+                                                    <td style="padding: 6px 12px; font-weight: 600;">Tk @pay.Amount.ToString("N2")</td>
+                                                    <td style="padding: 6px 12px; text-align: right;">
+                                                        <a class="btn-erp-secondary" style="padding: 3px 10px; font-size: 11px;" href="@Url.Action("ClientPaymentReceipt", "Accounts", new { paymentId = pay.PaymentID })" target="_blank">
+                                                            <i class="ti ti-printer" aria-hidden="true"></i> View Receipt
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-receipt-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Active Bookings</div>
+            <p style="margin: 0; font-size: 13px;">No unit bookings are available for receiving client installment payments.</p>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script src="~/Scripts/numeric-input.js"></script>
+}

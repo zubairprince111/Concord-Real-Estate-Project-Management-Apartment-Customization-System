@@ -1,0 +1,58 @@
+@model Final.Models.EditUserViewModel
+@{
+    ViewBag.Title = "Edit User";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var roleOptions = ViewBag.RoleOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem>;
+}
+
+<div class="dashboard-breadcrumb">
+    <a href="@Url.Action("Index", "Dashboard")">Dashboard</a>
+    <span>&gt;</span>
+    <a href="@Url.Action("Users", "Admin")">Users</a>
+    <span>&gt;</span>
+    <span>Edit User</span>
+</div>
+
+<div class="erp-card" style="max-width: 540px; margin: 0 auto;">
+    <div class="erp-card-header">
+        <h3 class="erp-card-title">Edit User Account</h3>
+    </div>
+
+    @using (Html.BeginForm("EditUser", "Admin", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.UserID)
+
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 6px;">Full Name</label>
+            @Html.TextBoxFor(m => m.FullName, new { @class = "form-control-erp" })
+            @Html.ValidationMessageFor(m => m.FullName, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 6px;">Email Address</label>
+            @Html.TextBoxFor(m => m.Email, new { @class = "form-control-erp", type = "email" })
+            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 6px;">Phone Number</label>
+            @Html.TextBoxFor(m => m.Phone, new { @class = "form-control-erp digits-only" })
+            @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger" })
+        </div>
+        <div class="form-group" style="margin-bottom: 24px;">
+            <label style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 6px;">Role Designation</label>
+            @Html.DropDownListFor(m => m.Role, roleOptions, "-- Select Role --", new { @class = "form-control-erp" })
+            @Html.ValidationMessageFor(m => m.Role, "", new { @class = "text-danger" })
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button type="submit" class="btn-erp-primary">
+                <i class="ti ti-check" aria-hidden="true"></i> Save Changes
+            </button>
+            <a href="@Url.Action("Users", "Admin")" class="btn-erp-secondary">Cancel</a>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script src="~/Scripts/numeric-input.js"></script>
+}

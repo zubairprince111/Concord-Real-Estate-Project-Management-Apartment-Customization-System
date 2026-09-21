@@ -1,0 +1,151 @@
+@model IEnumerable<Final.Models.ProjectModel>
+@using System.Linq
+@{
+    ViewBag.Title = "Projects";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">Company Development Projects</h3>
+    @if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+    {
+        <button type="button" class="btn-erp-primary" data-toggle="modal" data-target="#createModal">
+            <i class="ti ti-plus" aria-hidden="true"></i>
+            <span>New Project</span>
+        </button>
+    }
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div style="margin-bottom: 20px;">
+        <input type="text" id="projectSearchBox" class="form-control-erp" placeholder="Search by project name..." style="max-width: 320px;">
+    </div>
+    
+    <div class="table-card-wrapper">
+        <table class="erp-table project-table">
+            <thead>
+                <tr>
+                    <th>Project Name</th>
+                    <th>Location</th>
+                    <th>Budget</th>
+                    <th>Max Buildings</th>
+                    <th>Total Area (SqFt)</th>
+                    <th>Project Manager</th>
+                    <th>Accounts Officer</th>
+                    <th>Start Date</th>
+                    <th>Est. Completion</th>
+                    <th>Status</th>
+                    @if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+                    {
+                        <th>Action</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int currentUserId = Session["UserID"] != null ? (int)Session["UserID"] : 0;
+                    string userRole = Session["UserRole"] != null ? Session["UserRole"].ToString() : "";
+                }
+                @foreach (var project in Model)
+                {
+                    bool isMyAssignment = (userRole == "Project Manager" && project.ProjectManagerID == currentUserId) ||
+                                         (userRole == "Accounts Officer" && project.AccountOfficerID == currentUserId);
+                    <tr data-name="@project.ProjectName.ToLower()" style="@(isMyAssignment ? "background-color: #f0fdf4;" : "")">
+                        <td style="font-weight: 600;">
+                            @project.ProjectName
+                            @if (isMyAssignment)
+                            {
+                                <span class="status-pill status-Active" style="font-size: 10px; margin-left: 6px; padding: 2px 6px;">Assigned to You</span>
+                            }
+                        </td>
+                        <td>@project.Location</td>
+                        <td style="font-weight: 600;">Tk @project.Budget.ToString("N2")</td>
+                        <td>@(project.MaxBuildings?.ToString() ?? "—")</td>
+                        <td>@(project.TotalAreaSqFt?.ToString("N0") ?? "—")</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(project.ProjectManagerName))
+                            {
+                                <span style="font-weight: 500; color: #1e293b;"><i class="ti ti-user" style="font-size: 12px; color: #3b82f6;"></i> @project.ProjectManagerName</span>
+                            }
+                            else
+                            {
+                                <span style="color: #94a3b8; font-style: italic;">Unassigned</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(project.AccountOfficerName))
+                            {
+                                <span style="font-weight: 500; color: #1e293b;"><i class="ti ti-user" style="font-size: 12px; color: #10b981;"></i> @project.AccountOfficerName</span>
+                            }
+                            else
+                            {
+                                <span style="color: #94a3b8; font-style: italic;">Unassigned</span>
+                            }
+                        </td>
+                        <td>@(project.StartDate.HasValue ? project.StartDate.Value.ToString("dd MMM yyyy") : "—")</td>
+                        <td>@(project.EstimatedCompletionDate.HasValue ? project.EstimatedCompletionDate.Value.ToString("dd MMM yyyy") : "TBD")</td>
+                        <td><span class="status-pill status-@project.Status">@project.Status</span></td>
+                        @if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+                        {
+                            <td>
+                                <a href="#" class="btn-erp-secondary" style="padding: 4px 10px; font-size: 12px;" data-toggle="modal" data-target="#editModal_@project.ProjectID">
+                                    <i class="ti ti-edit" aria-hidden="true"></i> Edit
+                                </a>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="erp-card erp-empty-state">
+        <div class="erp-empty-icon"><i class="ti ti-folder-off" aria-hidden="true"></i></div>
+        <div class="erp-empty-title">No Projects Found</div>
+        <p style="margin: 0; font-size: 13px;">No real estate projects have been created yet.</p>
+    </div>
+}
+
+@if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+{
+    @Html.Partial("_CreateModal", (ViewData["CreateFormModel"] as Final.Models.ProjectModel) ?? new Final.Models.ProjectModel())
+
+    if (Model != null)
+    {
+        foreach (var project in Model)
+        {
+            var editFormModel = (ViewData["EditFormModel_" + project.ProjectID] as Final.Models.ProjectModel) ?? project;
+            @Html.Partial("_EditModal", editFormModel)
+        }
+    }
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script src="~/Scripts/numeric-input.js"></script>
+    <script>
+        $(function () {
+            var modalToOpen = '@ViewBag.OpenModalId';
+            if (modalToOpen) {
+                $('#' + modalToOpen).modal('show');
+            }
+        });
+    </script>
+    <script>
+        function applyProjectFilters() {
+            var searchText = document.getElementById('projectSearchBox').value.toLowerCase();
+            var rows = document.querySelectorAll('table.project-table tbody tr');
+            rows.forEach(function (row) {
+                var matchesName = row.getAttribute('data-name').indexOf(searchText) !== -1;
+                row.style.display = matchesName ? '' : 'none';
+            });
+        }
+        var projectSearchBoxEl = document.getElementById('projectSearchBox');
+        if (projectSearchBoxEl) {
+            projectSearchBoxEl.addEventListener('input', applyProjectFilters);
+        }
+    </script>
+}

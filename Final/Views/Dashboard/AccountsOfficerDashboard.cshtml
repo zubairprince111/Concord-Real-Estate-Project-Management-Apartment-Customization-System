@@ -1,0 +1,97 @@
+@{
+    ViewBag.Title = "Accounts Officer Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="stat-kpi-grid" style="grid-template-columns: minmax(280px, 360px);">
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-green">
+            <i class="ti ti-cash" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Client Payments (This Month)</div>
+            <div class="kpi-meta-value">Tk @(((decimal)ViewBag.MonthlyClientPaymentTotal).ToString("N2"))</div>
+        </div>
+    </div>
+</div>
+
+<div class="erp-section-header">
+    <h3 class="erp-section-title">Accounting Operations</h3>
+</div>
+
+<div class="action-cards-grid">
+    <a class="action-card-link" href="@Url.Action("Index", "Project")">
+        <div class="action-card-icon kpi-icon-amber">
+            <i class="ti ti-briefcase" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Projects Overview</h4>
+        <p class="action-card-desc">View details and financial status of assigned development projects.</p>
+    </a>
+    <a class="action-card-link" href="@Url.Action("ClientPayments", "Accounts")">
+        <div class="action-card-icon kpi-icon-blue">
+            <i class="ti ti-receipt" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Client Payments</h4>
+        <p class="action-card-desc">Record client installment payments per booking, track total paid amounts, and issue payment receipts.</p>
+    </a>
+    <a class="action-card-link" href="@Url.Action("Ledger", "Accounts")">
+        <div class="action-card-icon kpi-icon-purple">
+            <i class="ti ti-report-analytics" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Project Ledger</h4>
+        <p class="action-card-desc">Review total client payment collections per project in the project accounting ledger.</p>
+    </a>
+</div>
+
+@{
+    var assignedProjects = ViewBag.AssignedProjects as List<Final.Models.ProjectModel>;
+}
+
+<div class="erp-section-header" style="margin-top: 32px;">
+    <h3 class="erp-section-title"><i class="ti ti-briefcase" style="margin-right: 8px;"></i>My Assigned Projects</h3>
+</div>
+
+@if (assignedProjects != null && assignedProjects.Any())
+{
+    <div class="table-card-wrapper">
+        <table class="erp-table">
+            <thead>
+                <tr>
+                    <th>Project Name</th>
+                    <th>Location</th>
+                    <th>Budget</th>
+                    <th>Total Payments Collected</th>
+                    <th>Active Bookings</th>
+                    <th>Assigned Project Manager</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var proj in assignedProjects)
+                {
+                    decimal totalCollected = ViewData["TotalCollected_" + proj.ProjectID] != null ? (decimal)ViewData["TotalCollected_" + proj.ProjectID] : 0m;
+                    int bookingCount = ViewData["BookingCount_" + proj.ProjectID] != null ? (int)ViewData["BookingCount_" + proj.ProjectID] : 0;
+                    <tr>
+                        <td style="font-weight: 600; color: #0f172a;">@proj.ProjectName</td>
+                        <td>@proj.Location</td>
+                        <td style="font-weight: 600;">Tk @proj.Budget.ToString("N2")</td>
+                        <td style="font-weight: 600; color: #10b981;">Tk @totalCollected.ToString("N2")</td>
+                        <td>@bookingCount active</td>
+                        <td>
+                            <span style="font-weight: 500; color: #1e293b;"><i class="ti ti-user" style="font-size: 12px; color: #3b82f6;"></i> @proj.ProjectManagerName</span>
+                        </td>
+                        <td><span class="status-pill status-@proj.Status">@proj.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="erp-card erp-empty-state">
+        <div class="erp-empty-icon"><i class="ti ti-folder-off" aria-hidden="true"></i></div>
+        <div class="erp-empty-title">No Projects Assigned</div>
+        <p style="margin: 0; font-size: 13px;">You have not been assigned to any project yet.</p>
+    </div>
+}

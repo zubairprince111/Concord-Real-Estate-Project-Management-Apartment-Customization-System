@@ -1,0 +1,365 @@
+@model Final.Models.GenerateUnitsViewModel
+@{
+    var buildingOptions = ViewBag.BuildingOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem>;
+    var facingOptions = ViewBag.FacingOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem> ?? new System.Collections.Generic.List<System.Web.Mvc.SelectListItem>();
+}
+
+<div class="modal fade" id="generateUnitsModal" tabindex="-1" role="dialog" aria-labelledby="generateUnitsModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg" role="document" style="max-width: 820px;">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);">
+            <div class="modal-header" style="background-color: var(--primary); color: #ffffff; padding: 18px 24px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #ffffff; opacity: 0.8;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateUnitsModalLabel" style="font-size: 16px; font-weight: 700; margin: 0;">Bulk Generate Flat Units</h4>
+            </div>
+
+            @using (Html.BeginForm("GenerateUnits", "Unit", FormMethod.Post, new { id = "generateUnitsModalForm" }))
+            {
+                <div class="modal-body" style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+                    @Html.AntiForgeryToken()
+
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+                        Select a building, then fill in one template per position. The defined specifications will be automatically generated across all floors for that building position (e.g., position "A" template applies to all 1A, 2A, 3A flats).
+                    </p>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        @Html.Label("BuildingID", "Building", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                        @Html.DropDownListFor(m => m.BuildingID, buildingOptions, "-- Select Building --", new { @class = "form-control-erp", @id = "generateModalBuildingID" })
+                        @Html.ValidationMessageFor(m => m.BuildingID, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div id="generateModalBuildingInfoBox" class="alert-erp alert-erp-success" style="display:none; margin-bottom: 20px;"></div>
+                    <div id="generateModalBuildingWarningBox" class="alert-erp alert-erp-danger" style="display:none; margin-bottom: 20px;"></div>
+
+                    <div id="generateModalPositionsContainer"></div>
+                </div>
+
+                <div class="modal-footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px; display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
+                    <button type="button" class="btn-erp-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" id="generateModalBtn" class="btn-erp-primary" disabled="disabled">
+                        <i class="ti ti-check" aria-hidden="true"></i> Generate Units
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var currentProjectTotalArea = null;
+        var initialModel = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+
+        var facingOptions = [
+            @foreach (var opt in facingOptions)
+            {
+                @:{ value: "@opt.Value", text: "@opt.Text" },
+            }
+        ];
+
+        function buildFacingSelectHtml(index, selectedValue) {
+            var html = '<select class="form-control-erp" name="Positions[' + index + '].Facing"><option value="">-- Select Facing --</option>';
+            facingOptions.forEach(function (o) {
+                var selectedAttr = (selectedValue && selectedValue === o.value) ? ' selected="selected"' : '';
+                html += '<option value="' + o.value + '"' + selectedAttr + '>' + o.text + '</option>';
+            });
+            html += '</select>';
+            return html;
+        }
+
+        function buildCheckboxHtml(name, label, isChecked) {
+            var checkedAttr = isChecked ? ' checked="checked"' : '';
+            return '<div class="form-group" style="margin-bottom: 12px;"><div style="display: flex; align-items: center; gap: 8px;">' +
+                '<input type="checkbox" name="' + name + '" value="true" style="width: 16px; height: 16px;"' + checkedAttr + ' />' +
+                '<input type="hidden" name="' + name + '" value="false" /> ' +
+                '<label style="font-weight: 600; font-size: 13px; color: var(--text-main); margin: 0;">' + label + '</label>' +
+                '</div></div>';
+        }
+
+        function buildPositionCardHtml(index, label, initialData) {
+            initialData = initialData || {};
+            var prefix = 'Positions[' + index + ']';
+            return '<div class="erp-card" style="background-color: #f8fafc; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0;">' +
+                '<h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Position ' + label + ' Specifications</h4>' +
+                '<div class="row">' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Size (SqFt)</label><input type="text" class="form-control-erp numeric-only unit-size-input" name="' + prefix + '.SizeSqFt" placeholder="Enter size in SqFt" value="' + (initialData.SizeSqFt || '') + '" /><span class="size-error text-danger" style="display:none; font-size:12px; margin-top:4px; font-weight:600;"></span></div>' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Base Price</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.BasePrice" placeholder="Enter base price" value="' + (initialData.BasePrice || '') + '" /></div>' +
+                '</div>' +
+                '<div class="row">' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Bedrooms</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.BedroomCount" placeholder="e.g. 2" value="' + (initialData.BedroomCount || '') + '" /></div>' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Bathrooms</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.BathroomCount" placeholder="e.g. 2" value="' + (initialData.BathroomCount || '') + '" /></div>' +
+                '</div>' +
+                '<div class="row">' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Attached Bathrooms</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.AttachedBathrooms" placeholder="e.g. 1" value="' + (initialData.AttachedBathrooms !== undefined ? initialData.AttachedBathrooms : '') + '" /></div>' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Balcony Count</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.BalconyCount" placeholder="e.g. 1" value="' + (initialData.BalconyCount !== undefined ? initialData.BalconyCount : '0') + '" /></div>' +
+                '</div>' +
+                '<input type="hidden" name="' + prefix + '.HasKitchen" value="true" />' +
+                '<div class="row" style="margin-bottom: 10px;">' +
+                    '<div class="col-md-12">' + buildCheckboxHtml(prefix + '.HasHall', 'Has Hall', initialData.HasHall !== undefined ? initialData.HasHall : true) + '</div>' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom: 0;"><label style="font-weight:600; font-size:13px;">Facing Direction</label>' + buildFacingSelectHtml(index, initialData.Facing) + '</div>' +
+                '</div>';
+        }
+
+        function validateSizeInputs() {
+            var isValid = true;
+            var warnBox = document.getElementById('generateModalBuildingWarningBox');
+            var generateBtn = document.getElementById('generateModalBtn');
+            var inputs = document.querySelectorAll('#generateModalPositionsContainer .unit-size-input');
+
+            inputs.forEach(function (input) {
+                var errSpan = input.parentNode.querySelector('.size-error');
+                var rawVal = input.value.replace(/,/g, '').trim();
+                var val = parseFloat(rawVal);
+
+                if (currentProjectTotalArea && currentProjectTotalArea > 0 && !isNaN(val) && val > 0) {
+                    if (val >= currentProjectTotalArea) {
+                        isValid = false;
+                        input.style.border = '2px solid #dc2626';
+                        if (errSpan) {
+                            errSpan.innerHTML = '<i class="ti ti-alert-circle"></i> Unit size (' + val.toLocaleString() + ' SqFt) cannot be larger than or equal to project total area (' + currentProjectTotalArea.toLocaleString() + ' SqFt). It must be less than the project size.';
+                            errSpan.style.display = 'block';
+                        }
+                    } else {
+                        input.style.border = '';
+                        if (errSpan) {
+                            errSpan.style.display = 'none';
+                        }
+                    }
+                } else {
+                    input.style.border = '';
+                    if (errSpan) {
+                        errSpan.style.display = 'none';
+                    }
+                }
+            });
+
+            if (!isValid) {
+                if (generateBtn) generateBtn.disabled = true;
+                if (warnBox) {
+                    warnBox.innerHTML = '<i class="ti ti-alert-triangle"></i> <strong>Input Error:</strong> One or more flat unit sizes are larger than or equal to the project total area. Unit size must be less than the project size.';
+                    warnBox.style.display = 'block';
+                }
+            } else {
+                if (generateBtn) generateBtn.disabled = false;
+                if (warnBox && warnBox.innerHTML.indexOf('Input Error:') !== -1) {
+                    warnBox.style.display = 'none';
+                }
+            }
+
+            return isValid;
+        }
+
+        function renderPositions(unitsPerFloor, existingPositions) {
+            var container = document.getElementById('generateModalPositionsContainer');
+            container.innerHTML = '';
+            for (var i = 0; i < unitsPerFloor; i++) {
+                var label = String.fromCharCode('A'.charCodeAt(0) + i);
+                var initialData = (existingPositions && existingPositions[i]) ? existingPositions[i] : null;
+                container.insertAdjacentHTML('beforeend', buildPositionCardHtml(i, label, initialData));
+            }
+
+            container.querySelectorAll('.unit-size-input').forEach(function (input) {
+                input.addEventListener('input', validateSizeInputs);
+                input.addEventListener('keyup', validateSizeInputs);
+                input.addEventListener('change', validateSizeInputs);
+                input.addEventListener('blur', validateSizeInputs);
+            });
+
+            validateSizeInputs();
+        }
+
+        var buildingSelectEl = document.getElementById('generateModalBuildingID');
+        if (buildingSelectEl) {
+            buildingSelectEl.addEventListener('change', function () {
+                var buildingId = this.value;
+                var infoBox = document.getElementById('generateModalBuildingInfoBox');
+                var warnBox = document.getElementById('generateModalBuildingWarningBox');
+                var positionsContainer = document.getElementById('generateModalPositionsContainer');
+                var generateBtn = document.getElementById('generateModalBtn');
+
+                currentProjectTotalArea = null;
+                infoBox.style.display = 'none';
+                warnBox.style.display = 'none';
+                positionsContainer.innerHTML = '';
+                generateBtn.disabled = true;
+
+                if (!buildingId) { return; }
+
+                $.getJSON('@Url.Action("BuildingInfo", "Unit")', { buildingId: buildingId }, function (data) {
+                    if (!data) {
+                        warnBox.textContent = 'Could not load that building.';
+                        warnBox.style.display = 'block';
+                        return;
+                    }
+                    if (!data.unitsPerFloor) {
+                        warnBox.textContent = "Set 'Units Per Floor' on this building (via Edit Building) before generating units.";
+                        warnBox.style.display = 'block';
+                        return;
+                    }
+                    currentProjectTotalArea = data.totalAreaSqFt ? parseFloat(data.totalAreaSqFt) : null;
+                    infoBox.innerHTML = '<strong>' + data.buildingName + '</strong> &mdash; Total Floors: ' + data.totalFloors +
+                        ', Units Per Floor: ' + data.unitsPerFloor +
+                        (currentProjectTotalArea ? ', Project Total Area: <strong>' + currentProjectTotalArea.toLocaleString() + ' SqFt</strong>' : '');
+                    infoBox.style.display = 'block';
+
+                    var existingPositions = (initialModel && initialModel.BuildingID == buildingId && initialModel.Positions && initialModel.Positions.length > 0)
+                        ? initialModel.Positions
+                        : null;
+                    renderPositions(data.unitsPerFloor, existingPositions);
+                    generateBtn.disabled = false;
+                }).fail(function () {
+                    warnBox.textContent = 'Could not load that building.';
+                    warnBox.style.display = 'block';
+                });
+            });
+
+            if (buildingSelectEl.value) {
+                buildingSelectEl.dispatchEvent(new Event('change'));
+            }
+        }
+
+        function validateFormInputs() {
+            var isSizeValid = validateSizeInputs();
+            var warnBox = document.getElementById('generateModalBuildingWarningBox');
+            var missingErrors = [];
+            var activeCardCount = 0;
+
+            var cards = document.querySelectorAll('#generateModalPositionsContainer .erp-card');
+            if (!cards || cards.length === 0) {
+                if (warnBox) {
+                    warnBox.innerHTML = '<i class="ti ti-alert-circle"></i> Please select a building with configured Units Per Floor.';
+                    warnBox.style.display = 'block';
+                }
+                return false;
+            }
+
+            cards.forEach(function (card, idx) {
+                var label = String.fromCharCode('A'.charCodeAt(0) + idx);
+                var sizeInput = card.querySelector('input[name$=".SizeSqFt"]');
+                var priceInput = card.querySelector('input[name$=".BasePrice"]');
+                var bedInput = card.querySelector('input[name$=".BedroomCount"]');
+                var bathInput = card.querySelector('input[name$=".BathroomCount"]');
+                var facingSelect = card.querySelector('select[name$=".Facing"]');
+
+                var hasSize = sizeInput && sizeInput.value.trim() !== '';
+                var hasPrice = priceInput && priceInput.value.trim() !== '';
+                var hasBed = bedInput && bedInput.value.trim() !== '';
+                var hasBath = bathInput && bathInput.value.trim() !== '';
+                var hasFacing = facingSelect && facingSelect.value !== '';
+
+                var isAnyFieldFilled = hasSize || hasPrice || hasBed || hasBath || hasFacing;
+
+                if (isAnyFieldFilled) {
+                    activeCardCount++;
+                    if (!hasSize) missingErrors.push('Position ' + label + ': Size (SqFt) is required.');
+                    if (!hasPrice) missingErrors.push('Position ' + label + ': Base Price is required.');
+                    if (!hasBed) missingErrors.push('Position ' + label + ': Bedroom Count is required.');
+                    if (!hasBath) missingErrors.push('Position ' + label + ': Bathroom Count is required.');
+                    if (!hasFacing) missingErrors.push('Position ' + label + ': Facing Direction is required.');
+                }
+            });
+
+            if (activeCardCount === 0) {
+                if (warnBox) {
+                    warnBox.innerHTML = '<i class="ti ti-alert-circle"></i> Please fill in specifications for at least 1 unit position.';
+                    warnBox.style.display = 'block';
+                }
+                return false;
+            }
+
+            if (missingErrors.length > 0) {
+                if (warnBox) {
+                    warnBox.innerHTML = '<i class="ti ti-alert-circle"></i> <strong>Missing Required Fields:</strong><br/>' + missingErrors.join('<br/>');
+                    warnBox.style.display = 'block';
+                }
+                return false;
+            }
+
+            return isSizeValid;
+        }
+
+        $('#generateUnitsModalForm').on('submit', function (e) {
+            e.preventDefault();
+
+            if (!validateFormInputs()) {
+                return false;
+            }
+
+            var form = $(this);
+            var generateBtn = $('#generateModalBtn');
+            var warnBox = $('#generateModalBuildingWarningBox');
+
+            generateBtn.prop('disabled', true).html('<i class="ti ti-loader spin"></i> Generating...');
+
+            // Build form data manually, stripping out empty position templates
+            // so MVC model binding won't create objects for them and [Required]
+            // validation won't fire on unfilled positions.
+            var allFields = form.serializeArray();
+            var filteredFields = [];
+
+            // First pass: identify which position indices have data (at least one key field filled)
+            var activeIndices = {};
+            for (var f = 0; f < allFields.length; f++) {
+                var match = allFields[f].name.match(/^Positions\[(\d+)\]\.(SizeSqFt|BasePrice|BedroomCount|BathroomCount|Facing)$/);
+                if (match) {
+                    var idx = match[1];
+                    var val = allFields[f].value.trim();
+                    if (val !== '') {
+                        activeIndices[idx] = true;
+                    }
+                }
+            }
+
+            // Find the active indices sorted, and build a mapping: old index -> new sequential index
+            var activeKeys = Object.keys(activeIndices).sort(function (a, b) { return parseInt(a) - parseInt(b); });
+            var indexMap = {};
+            for (var k = 0; k < activeKeys.length; k++) {
+                indexMap[activeKeys[k]] = k;
+            }
+
+            // Second pass: include non-position fields, and only include position fields for active indices
+            // Re-index them sequentially so MVC binds them as Positions[0], Positions[1], etc.
+            for (var f = 0; f < allFields.length; f++) {
+                var posMatch = allFields[f].name.match(/^Positions\[(\d+)\]\.(.+)$/);
+                if (posMatch) {
+                    var oldIdx = posMatch[0] ? posMatch[1] : null;
+                    if (oldIdx !== null && activeIndices[oldIdx]) {
+                        var newIdx = indexMap[oldIdx];
+                        filteredFields.push({
+                            name: 'Positions[' + newIdx + '].' + posMatch[2],
+                            value: allFields[f].value
+                        });
+                    }
+                    // Skip fields for inactive positions entirely
+                } else {
+                    filteredFields.push(allFields[f]);
+                }
+            }
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: $.param(filteredFields),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (res) {
+                    if (res && res.success) {
+                        window.location.href = res.redirectUrl || '@Url.Action("Index", "Unit")';
+                    } else {
+                        generateBtn.prop('disabled', false).html('<i class="ti ti-check" aria-hidden="true"></i> Generate Units');
+                        var msg = (res && res.message && res.message.trim() !== '') ? res.message : 'Failed to generate units. Please check all fields and try again.';
+                        warnBox.html('<i class="ti ti-alert-circle"></i> ' + msg).show();
+                    }
+                },
+                error: function (xhr) {
+                    generateBtn.prop('disabled', false).html('<i class="ti ti-check" aria-hidden="true"></i> Generate Units');
+                    var responseMsg = (xhr.responseJSON && xhr.responseJSON.message)
+                        ? xhr.responseJSON.message
+                        : 'An error occurred while generating units. Please check all fields and try again.';
+                    warnBox.html('<i class="ti ti-alert-circle"></i> ' + responseMsg).show();
+                }
+            });
+
+            return false;
+        });
+    });
+</script>

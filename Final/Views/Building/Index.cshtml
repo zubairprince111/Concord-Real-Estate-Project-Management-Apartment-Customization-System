@@ -1,0 +1,169 @@
+@model IEnumerable<Final.Models.BuildingModel>
+@using System.Linq
+@{
+    ViewBag.Title = "Buildings";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">Building Structures & Towers</h3>
+    @if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+    {
+        <button type="button" class="btn-erp-primary" data-toggle="modal" data-target="#createModal">
+            <i class="ti ti-plus" aria-hidden="true"></i>
+            <span>New Building</span>
+        </button>
+    }
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div style="margin-bottom: 20px;">
+        <input type="text" id="buildingSearchBox" class="form-control-erp" placeholder="Search by building or project..." style="max-width: 320px;">
+    </div>
+
+    <div class="project-groups-wrapper">
+        @foreach (var projectGroup in Model.GroupBy(b => new { b.ProjectID, b.ProjectName }))
+        {
+            <div class="project-group erp-card" style="padding: 20px; margin-bottom: 20px;">
+                <h4 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="ti ti-briefcase" style="color: #2563eb;" aria-hidden="true"></i>
+                    @projectGroup.Key.ProjectName
+                </h4>
+                <div class="table-card-wrapper" style="margin-bottom: 0;">
+                    <table class="erp-table project-table">
+                        <thead>
+                            <tr>
+                                <th>Building Name</th>
+                                <th>Total Floors</th>
+                                <th>Units/Floor</th>
+                                <th>Parking</th>
+                                <th>Est. Completion</th>
+                                @if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+                                {
+                                    <th>Action</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var b in projectGroup)
+                            {
+                                <tr data-name="@((b.ProjectName + " " + b.BuildingName).ToLower())">
+                                    <td style="font-weight: 600;">@b.BuildingName</td>
+                                    <td>@b.TotalFloors</td>
+                                    <td>@(b.UnitsPerFloor.HasValue ? b.UnitsPerFloor.ToString() : "—")</td>
+                                    <td>
+                                        @if (b.HasParkingFacility)
+                                        {
+                                            <span class="status-pill status-Approved">Yes</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-pill status-Inactive">No</span>
+                                        }
+                                    </td>
+                                    <td>@(b.EstimatedCompletionDate.HasValue ? b.EstimatedCompletionDate.Value.ToString("dd MMM yyyy") : "TBD")</td>
+                                    @if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+                                    {
+                                        <td>
+                                            <a href="#" class="btn-erp-secondary" style="padding: 4px 10px; font-size: 12px;" data-toggle="modal" data-target="#editModal_@b.BuildingID">
+                                                <i class="ti ti-edit" aria-hidden="true"></i> Edit
+                                            </a>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="erp-card erp-empty-state">
+        <div class="erp-empty-icon"><i class="ti ti-building-off" aria-hidden="true"></i></div>
+        <div class="erp-empty-title">No Buildings Found</div>
+        <p style="margin: 0; font-size: 13px;">No buildings or towers have been created yet.</p>
+    </div>
+}
+
+@if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+{
+    @Html.Partial("_CreateModal", (ViewData["CreateFormModel"] as Final.Models.BuildingModel) ?? new Final.Models.BuildingModel())
+
+    if (Model != null)
+    {
+        foreach (var b in Model)
+        {
+            var editFormModel = (ViewData["EditFormModel_" + b.BuildingID] as Final.Models.BuildingModel) ?? b;
+            @Html.Partial("_EditModal", editFormModel)
+        }
+    }
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script src="~/Scripts/numeric-input.js"></script>
+    <script>
+        $(function () {
+            var modalToOpen = '@ViewBag.OpenModalId';
+            if (modalToOpen) {
+                $('#' + modalToOpen).modal('show');
+            }
+        });
+    </script>
+    <script>
+        function applyBuildingFilters() {
+            var searchText = document.getElementById('buildingSearchBox').value.toLowerCase();
+            var groups = document.querySelectorAll('.project-group');
+            groups.forEach(function (group) {
+                var anyVisible = false;
+                var rows = group.querySelectorAll('tbody tr[data-name]');
+                rows.forEach(function (row) {
+                    var matchesName = row.getAttribute('data-name').indexOf(searchText) !== -1;
+                    row.style.display = matchesName ? '' : 'none';
+                    if (matchesName) { anyVisible = true; }
+                });
+                group.style.display = anyVisible ? '' : 'none';
+            });
+        }
+        var buildingSearchBoxEl = document.getElementById('buildingSearchBox');
+        if (buildingSearchBoxEl) {
+            buildingSearchBoxEl.addEventListener('input', applyBuildingFilters);
+        }
+    </script>
+    <script>
+        function applyProjectDateBounds(projectSelect) {
+            var form = projectSelect.closest('form');
+            var dateInput = form ? form.querySelector('input[name="EstimatedCompletionDate"]') : null;
+            if (!dateInput) { return; }
+
+            var projectId = projectSelect.value;
+            if (!projectId) {
+                dateInput.removeAttribute('min');
+                dateInput.removeAttribute('max');
+                return;
+            }
+
+            $.getJSON('@Url.Action("ProjectCompletionDate", "Building")', { projectId: projectId }, function (data) {
+                if (data && data.startDate) {
+                    dateInput.setAttribute('min', data.startDate);
+                } else {
+                    dateInput.removeAttribute('min');
+                }
+                if (data && data.completionDate) {
+                    dateInput.setAttribute('max', data.completionDate);
+                } else {
+                    dateInput.removeAttribute('max');
+                }
+            });
+        }
+
+        document.querySelectorAll('select[name="ProjectID"]').forEach(function (select) {
+            select.addEventListener('change', function () { applyProjectDateBounds(select); });
+            if (select.value) { applyProjectDateBounds(select); }
+        });
+    </script>
+}

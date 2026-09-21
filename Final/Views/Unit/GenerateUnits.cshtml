@@ -1,0 +1,150 @@
+@model Final.Models.GenerateUnitsViewModel
+@{
+    ViewBag.Title = "Generate Units";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var buildingOptions = ViewBag.BuildingOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem>;
+    var facingOptions = ViewBag.FacingOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem>;
+}
+
+<div class="dashboard-breadcrumb">
+    <a href="@Url.Action("Index", "Dashboard")">Dashboard</a>
+    <span>&gt;</span>
+    <a href="@Url.Action("Index", "Unit")">Units</a>
+    <span>&gt;</span>
+    <span>Generate Units</span>
+</div>
+
+<div class="erp-card" style="max-width: 760px; margin: 0 auto;">
+    <div class="erp-card-header">
+        <h3 class="erp-card-title">Bulk Generate Flat Units</h3>
+    </div>
+    
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+        Select a building, then fill in one template per position. The defined specifications will be automatically generated across all floors for that building position (e.g., position "A" template applies to all 1A, 2A, 3A flats).
+    </p>
+
+    @using (Html.BeginForm("GenerateUnits", "Unit", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            @Html.Label("BuildingID", "Building", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+            @Html.DropDownList("BuildingID", buildingOptions, "-- Select Building --", new { @class = "form-control-erp" })
+            @Html.ValidationMessage("BuildingID", "", new { @class = "text-danger" })
+        </div>
+
+        <div id="buildingInfoBox" class="alert-erp alert-erp-success" style="display:none; margin-bottom: 20px;"></div>
+        <div id="buildingWarningBox" class="alert-erp alert-erp-danger" style="display:none; margin-bottom: 20px;"></div>
+
+        <div id="positionsContainer"></div>
+
+        <div style="margin-top: 24px; display: flex; align-items: center; gap: 12px;">
+            <button type="submit" id="generateBtn" class="btn-erp-primary" disabled="disabled">
+                <i class="ti ti-check" aria-hidden="true"></i> Generate Units
+            </button>
+            <a href="@Url.Action("Index", "Unit")" class="btn-erp-secondary">Cancel</a>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script src="~/Scripts/numeric-input.js"></script>
+    <script>
+        var facingOptions = [
+            @foreach (var opt in facingOptions)
+            {
+                @:{ value: "@opt.Value", text: "@opt.Text" },
+            }
+        ];
+
+        function buildFacingSelectHtml(index) {
+            var html = '<select class="form-control-erp" name="Positions[' + index + '].Facing"><option value="">-- Select Facing --</option>';
+            facingOptions.forEach(function (o) {
+                html += '<option value="' + o.value + '">' + o.text + '</option>';
+            });
+            html += '</select>';
+            return html;
+        }
+
+        function buildCheckboxHtml(name, label) {
+            return '<div class="form-group" style="margin-bottom: 12px;"><div style="display: flex; align-items: center; gap: 8px;">' +
+                '<input type="checkbox" name="' + name + '" value="true" style="width: 16px; height: 16px;" />' +
+                '<input type="hidden" name="' + name + '" value="false" /> ' +
+                '<label style="font-weight: 600; font-size: 13px; color: var(--text-main); margin: 0;">' + label + '</label>' +
+                '</div></div>';
+        }
+
+        function buildPositionCardHtml(index, label) {
+            var prefix = 'Positions[' + index + ']';
+            return '<div class="erp-card" style="background-color: #f8fafc; padding: 20px; margin-bottom: 20px;">' +
+                '<h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Position ' + label + ' Specifications</h4>' +
+                '<div class="row">' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Size (SqFt)</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.SizeSqFt" placeholder="Enter size in SqFt" /></div>' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Base Price</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.BasePrice" placeholder="Enter base price" /></div>' +
+                '</div>' +
+                '<div class="row">' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Bedrooms</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.BedroomCount" placeholder="e.g. 2" /></div>' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Bathrooms</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.BathroomCount" placeholder="e.g. 2" /></div>' +
+                '</div>' +
+                '<div class="row">' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Attached Bathrooms</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.AttachedBathrooms" placeholder="e.g. 1" /></div>' +
+                    '<div class="col-md-6 form-group" style="margin-bottom: 14px;"><label style="font-weight:600; font-size:13px;">Balcony Count</label><input type="text" class="form-control-erp numeric-only" name="' + prefix + '.BalconyCount" placeholder="e.g. 1" value="0" /></div>' +
+                '</div>' +
+                '<input type="hidden" name="' + prefix + '.HasKitchen" value="true" />' +
+                '<div class="row" style="margin-bottom: 10px;">' +
+                    '<div class="col-md-12">' + buildCheckboxHtml(prefix + '.HasHall', 'Has Hall') + '</div>' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom: 0;"><label style="font-weight:600; font-size:13px;">Facing Direction</label>' + buildFacingSelectHtml(index) + '</div>' +
+                '</div>';
+        }
+
+        function renderPositions(unitsPerFloor) {
+            var container = document.getElementById('positionsContainer');
+            container.innerHTML = '';
+            for (var i = 0; i < unitsPerFloor; i++) {
+                var label = String.fromCharCode('A'.charCodeAt(0) + i);
+                container.insertAdjacentHTML('beforeend', buildPositionCardHtml(i, label));
+            }
+        }
+
+        var buildingSelectEl = document.getElementById('BuildingID');
+        if (buildingSelectEl) {
+            buildingSelectEl.addEventListener('change', function () {
+                var buildingId = this.value;
+                var infoBox = document.getElementById('buildingInfoBox');
+                var warnBox = document.getElementById('buildingWarningBox');
+                var positionsContainer = document.getElementById('positionsContainer');
+                var generateBtn = document.getElementById('generateBtn');
+
+                infoBox.style.display = 'none';
+                warnBox.style.display = 'none';
+                positionsContainer.innerHTML = '';
+                generateBtn.disabled = true;
+
+                if (!buildingId) { return; }
+
+                $.getJSON('@Url.Action("BuildingInfo", "Unit")', { buildingId: buildingId }, function (data) {
+                    if (!data) {
+                        warnBox.textContent = 'Could not load that building.';
+                        warnBox.style.display = '';
+                        return;
+                    }
+                    if (!data.unitsPerFloor) {
+                        warnBox.textContent = "Set 'Units Per Floor' on this building (via Edit Building) before generating units.";
+                        warnBox.style.display = '';
+                        return;
+                    }
+                    infoBox.innerHTML = '<strong>' + data.buildingName + '</strong> &mdash; Total Floors: ' + data.totalFloors +
+                        ', Units Per Floor: ' + data.unitsPerFloor +
+                        ', Parking Facility: ' + (data.hasParkingFacility ? 'Yes' : 'No');
+                    infoBox.style.display = '';
+                    renderPositions(data.unitsPerFloor);
+                    generateBtn.disabled = false;
+                }).fail(function () {
+                    warnBox.textContent = 'Could not load that building.';
+                    warnBox.style.display = '';
+                });
+            });
+        }
+    </script>
+}

@@ -1,0 +1,130 @@
+@model Final.Models.ManageUsersViewModel
+@using System.Linq
+@{
+    ViewBag.Title = "Users";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">User Account Administration</h3>
+    <button type="button" class="btn-erp-primary" data-toggle="modal" data-target="#createModal">
+        <i class="ti ti-user-plus" aria-hidden="true"></i>
+        <span>Create New User</span>
+    </button>
+</div>
+
+<div class="erp-card">
+    <div style="display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap;">
+        <input type="text" id="userSearchBox" class="form-control-erp" placeholder="Search by name..." style="max-width: 280px;">
+        <select id="roleFilterDropdown" class="form-control-erp" style="max-width: 220px;">
+            <option value="">-- All Roles --</option>
+            @foreach (var role in Model.RoleOptions)
+            {
+                <option value="@role.Value">@role.Text</option>
+            }
+        </select>
+    </div>
+
+    @if (Model.Users.Any())
+    {
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model.Users)
+                    {
+                        <tr data-role="@u.Role" data-name="@u.FullName.ToLower()">
+                            <td style="font-weight: 600;">@u.FullName</td>
+                            <td>@u.Email</td>
+                            <td><span class="role-pill-badge">@u.Role</span></td>
+                            <td>@(string.IsNullOrEmpty(u.Phone) ? "—" : u.Phone)</td>
+                            <td>
+                                @(u.IsActive ? Html.Raw("<span class='status-pill status-Active'>Active</span>") : Html.Raw("<span class='status-pill status-Inactive'>Inactive</span>"))
+                            </td>
+                            <td>@u.CreatedDate.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <a href="#" class="btn-erp-secondary" style="padding: 4px 10px; font-size: 12px;" data-toggle="modal" data-target="#editModal_@u.UserID">
+                                        <i class="ti ti-edit" aria-hidden="true"></i> Edit
+                                    </a>
+                                    @using (Html.BeginForm("ToggleUserActive", "Admin", FormMethod.Post, new { style = "display: inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@u.UserID" />
+                                        <button type="submit" class="btn-erp-secondary" style="padding: 4px 10px; font-size: 12px; color: @(u.IsActive ? "#dc2626" : "#16a34a");">
+                                            <i class="ti ti-power" aria-hidden="true"></i> @(u.IsActive ? "Deactivate" : "Activate")
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-users-minus" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Users Found</div>
+            <p style="margin: 0; font-size: 13px;">No user accounts have been registered.</p>
+        </div>
+    }
+</div>
+
+@Html.Partial("_CreateUserModal", (ViewData["CreateFormModel"] as Final.Models.CreateUserViewModel) ?? new Final.Models.CreateUserViewModel())
+
+@foreach (var u in Model.Users)
+{
+    var editFormModel = (ViewData["EditFormModel_" + u.UserID] as Final.Models.EditUserViewModel) ?? new Final.Models.EditUserViewModel
+    {
+        UserID = u.UserID,
+        FullName = u.FullName,
+        Email = u.Email,
+        Role = u.Role,
+        Phone = u.Phone
+    };
+    @Html.Partial("_EditUserModal", editFormModel)
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script src="~/Scripts/numeric-input.js"></script>
+    <script>
+        $(function () {
+            var modalToOpen = '@ViewBag.OpenModalId';
+            if (modalToOpen) {
+                $('#' + modalToOpen).modal('show');
+            }
+        });
+    </script>
+    <script>
+        function applyUserFilters() {
+            var searchText = document.getElementById('userSearchBox').value.toLowerCase();
+            var roleFilter = document.getElementById('roleFilterDropdown').value;
+            var rows = document.querySelectorAll('table.req-table tbody tr');
+            rows.forEach(function (row) {
+                var matchesName = row.getAttribute('data-name').indexOf(searchText) !== -1;
+                var matchesRole = roleFilter === '' || row.getAttribute('data-role') === roleFilter;
+                row.style.display = (matchesName && matchesRole) ? '' : 'none';
+            });
+        }
+        var userSearchBoxEl = document.getElementById('userSearchBox');
+        var roleFilterDropdownEl = document.getElementById('roleFilterDropdown');
+        if (userSearchBoxEl && roleFilterDropdownEl) {
+            userSearchBoxEl.addEventListener('input', applyUserFilters);
+            roleFilterDropdownEl.addEventListener('change', applyUserFilters);
+        }
+    </script>
+}

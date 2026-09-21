@@ -1,0 +1,58 @@
+@model Final.Models.BuildingModel
+@{
+    var projectOptions = ViewBag.CreateProjectOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem>;
+}
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);">
+            <div class="modal-header" style="background-color: var(--primary); color: #ffffff; padding: 18px 24px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #ffffff; opacity: 0.8;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createModalLabel" style="font-size: 16px; font-weight: 700; margin: 0;">New Building</h4>
+            </div>
+            @using (Html.BeginForm("Create", "Building", FormMethod.Post))
+            {
+                <div class="modal-body" style="padding: 24px;">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        @Html.LabelFor(m => m.ProjectID, "Project", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                        @Html.DropDownListFor(m => m.ProjectID, projectOptions, "-- Select Project --", new { @class = "form-control-erp" })
+                        @Html.ValidationMessageFor(m => m.ProjectID, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        @Html.LabelFor(m => m.BuildingName, "Building Name", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                        @Html.TextBoxFor(m => m.BuildingName, new { @class = "form-control-erp no-digits", pattern = "[^0-9]+", title = "Numbers are not allowed in the building name" })
+                        @Html.ValidationMessageFor(m => m.BuildingName, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        @Html.LabelFor(m => m.TotalFloors, "Total Floors", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                        @Html.TextBoxFor(m => m.TotalFloors, new { @class = "form-control-erp numeric-only" })
+                        @Html.ValidationMessageFor(m => m.TotalFloors, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        @Html.LabelFor(m => m.UnitsPerFloor, "Units Per Floor", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                        @Html.TextBoxFor(m => m.UnitsPerFloor, new { @class = "form-control-erp numeric-only" })
+                        @Html.ValidationMessageFor(m => m.UnitsPerFloor, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            @Html.CheckBoxFor(m => m.HasParkingFacility, new { @style = "width: 16px; height: 16px;" })
+                            @Html.LabelFor(m => m.HasParkingFacility, "Parking Facility Available", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main); margin: 0;" })
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        @Html.LabelFor(m => m.EstimatedCompletionDate, "Estimated Completion Date", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                        @Html.TextBoxFor(m => m.EstimatedCompletionDate, "{0:yyyy-MM-dd}", new { @class = "form-control-erp", type = "date" })
+                        @Html.ValidationMessageFor(m => m.EstimatedCompletionDate, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="modal-footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px;">
+                    <button type="button" class="btn-erp-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-erp-primary">Create Building</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>

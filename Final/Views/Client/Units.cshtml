@@ -1,0 +1,89 @@
+@model IEnumerable<Final.Models.UnitModel>
+@using System.Linq
+@{
+    ViewBag.Title = "Available Units";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">Browse Available Apartments & Units</h3>
+</div>
+
+<div class="erp-card">
+    @if (Model != null && Model.Any())
+    {
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="unitSearchBox" class="form-control-erp" placeholder="Search by project or building..." style="max-width: 320px;">
+        </div>
+
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Building</th>
+                        <th>Flat #</th>
+                        <th>Floor</th>
+                        <th>Size (SqFt)</th>
+                        <th>Rooms (BHK)</th>
+                        <th>Facing</th>
+                        <th>Base Price</th>
+                        <th>Expected Completion</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model)
+                    {
+                        <tr data-name="@((u.ProjectName + " " + u.BuildingName).ToLower())">
+                            <td style="font-weight: 600;">@u.ProjectName</td>
+                            <td>@u.BuildingName</td>
+                            <td style="font-weight: 600;">@u.FlatNumber</td>
+                            <td>@u.FloorNumber</td>
+                            <td>@u.SizeSqFt.ToString("N0")</td>
+                            <td>@u.BhkSummary</td>
+                            <td>@u.Facing</td>
+                            <td style="font-weight: 700; color: #2563eb;">Tk @u.BasePrice.ToString("N2")</td>
+                            <td>@(u.EstimatedCompletionDate.HasValue ? u.EstimatedCompletionDate.Value.ToString("dd MMM yyyy") : "TBD")</td>
+                            <td>
+                                @using (Html.BeginForm("BookUnit", "Client", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="unitId" value="@u.UnitID" />
+                                    <button type="submit" class="btn-erp-primary" style="padding: 5px 14px; font-size: 12px;">
+                                        <i class="ti ti-home-check" aria-hidden="true"></i> Book
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-home-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Units Available</div>
+            <p style="margin: 0; font-size: 13px;">No flat units are currently available for booking.</p>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        function applyUnitFilters() {
+            var searchText = document.getElementById('unitSearchBox').value.toLowerCase();
+            var rows = document.querySelectorAll('table.req-table tbody tr');
+            rows.forEach(function (row) {
+                var matchesName = row.getAttribute('data-name').indexOf(searchText) !== -1;
+                row.style.display = matchesName ? '' : 'none';
+            });
+        }
+        var unitSearchBoxEl = document.getElementById('unitSearchBox');
+        if (unitSearchBoxEl) {
+            unitSearchBoxEl.addEventListener('input', applyUnitFilters);
+        }
+    </script>
+}

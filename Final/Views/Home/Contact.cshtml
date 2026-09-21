@@ -1,0 +1,287 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Contact - Concord Real Estate Development</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* Navbar */
+        .navbar-public {
+            height: 70px;
+            flex-shrink: 0;
+            background-color: #fff;
+            padding: 0 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 100;
+        }
+        .navbar-public .logo { display: block; height: 50px; }
+        .navbar-public .logo img { height: 100%; object-fit: contain; }
+        .navbar-public .nav-links { display: flex; align-items: center; gap: 30px; }
+        .navbar-public .nav-links a { color: #1F3A5F; font-weight: 600; font-size: 14px; text-decoration: none; position: relative; padding: 5px 0; }
+        .navbar-public .nav-links a.active::after { content: ""; position: absolute; bottom: -5px; left: 0; width: 100%; height: 3px; background-color: #F1C40F; border-radius: 2px; }
+        .navbar-public .nav-links a:hover { color: #000; }
+        .login-btn { background-color: #1F3A5F; color: #fff !important; padding: 8px 20px !important; border-radius: 6px; display: flex; align-items: center; gap: 8px; transition: background 0.3s; }
+        .login-btn:hover { background-color: #16283F; color: #fff !important; text-decoration: none !important; }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, #1F3A5F 0%, #112240 100%);
+            color: #fff;
+            padding: 4vh 50px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .page-header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+        .page-header p {
+            color: #F1C40F;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 8px;
+        }
+
+        /* Content Layout */
+        .content-section {
+            flex: 1;
+            padding: 4vh 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .contact-container {
+            display: flex;
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+            max-width: 1000px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .contact-info {
+            background-color: #1F3A5F;
+            color: #fff;
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .contact-info h2 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+        
+        .contact-info p {
+            color: #d7e4f2;
+            line-height: 1.5;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .contact-method {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .contact-method i {
+            background: rgba(255,255,255,0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #F1C40F;
+            flex-shrink: 0;
+        }
+        .contact-method-text h4 {
+            margin: 0 0 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .contact-method-text p, .contact-method-text a {
+            margin: 0;
+            font-size: 13px;
+            color: #d7e4f2;
+            text-decoration: none;
+            line-height: 1.5;
+        }
+        .contact-method-text a:hover {
+            color: #F1C40F;
+        }
+
+        .contact-form-container {
+            flex: 1.2;
+            padding: 30px;
+            background-color: #fff;
+        }
+        .contact-form-container h2 {
+            color: #1F3A5F;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #475569;
+            font-size: 14px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .btn-submit {
+            background-color: #F1C40F;
+            color: #1F3A5F;
+            border: none;
+            padding: 14px 28px;
+            font-weight: 700;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .btn-submit:hover {
+            background-color: #d4ac0d;
+        }
+
+        /* Footer */
+        .footer {
+            flex-shrink: 0;
+            padding: 16px 50px;
+            background-color: #fff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #6c757d;
+            font-size: 12px;
+        }
+        .footer-tagline { font-style: italic; }
+        
+        @@media (max-width: 768px) {
+            .contact-container { flex-direction: column; }
+            .contact-info, .contact-form-container { padding: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar-public">
+        <a href="@Url.Action("Index", "Home")" class="logo">
+            <img src="@Url.Content("~/images.png")" alt="Concord Logo" />
+        </a>
+        <div class="nav-links">
+            <a href="@Url.Action("Index", "Home")">Home</a>
+            <a href="@Url.Action("About", "Home")">About</a>
+            <a href="@Url.Action("Contact", "Home")" class="active">Contact</a>
+            <a href="@Url.Action("Login", "Account")" class="login-btn"><i class="fas fa-user"></i> Login</a>
+        </div>
+    </div>
+
+    <div class="page-header">
+        <h1>Get in Touch</h1>
+        <p>We're here to help with your inquiries</p>
+    </div>
+
+    <div class="content-section">
+        <div class="contact-card" style="background-color: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); max-width: 760px; width: 100%; padding: 40px; border: 1px solid #e2e8f0;">
+            <h2 style="color: #1F3A5F; font-size: 24px; font-weight: 800; margin-top: 0; margin-bottom: 12px;">Contact Information</h2>
+            <p style="color: #64748b; font-size: 14.5px; line-height: 1.6; margin-bottom: 30px;">
+                Have questions about our projects or need support with your bookings? Reach out to us through any of our official channels below.
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <div class="contact-method" style="display: flex; gap: 16px; align-items: flex-start; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <i class="fas fa-map-marker-alt" style="background: #e0f2fe; color: #0284c7; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"></i>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1F3A5F;">Office Address</h4>
+                        <p style="margin: 0; font-size: 13.5px; color: #64748b; line-height: 1.5;">123 Development Avenue<br>Dhaka, Bangladesh</p>
+                    </div>
+                </div>
+
+                <div class="contact-method" style="display: flex; gap: 16px; align-items: flex-start; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <i class="fas fa-phone-alt" style="background: #dcfce7; color: #16a34a; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"></i>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1F3A5F;">Phone Number</h4>
+                        <p style="margin: 0; font-size: 13.5px; color: #64748b; line-height: 1.5;">+880 1XXX-XXXXXX</p>
+                    </div>
+                </div>
+
+                <div class="contact-method" style="display: flex; gap: 16px; align-items: flex-start; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <i class="fas fa-envelope" style="background: #ffedd5; color: #ea580c; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"></i>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1F3A5F;">Email Address</h4>
+                        <a href="mailto:info@concord.test" style="font-size: 13.5px; color: #2563eb; text-decoration: none; font-weight: 500;">info@concord.test</a>
+                    </div>
+                </div>
+
+                <div class="contact-method" style="display: flex; gap: 16px; align-items: flex-start; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <i class="fas fa-clock" style="background: #f3e8ff; color: #9333ea; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"></i>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1F3A5F;">Business Hours</h4>
+                        <p style="margin: 0; font-size: 13.5px; color: #64748b; line-height: 1.5;">Sunday &ndash; Thursday<br>9:00 AM &ndash; 6:00 PM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>

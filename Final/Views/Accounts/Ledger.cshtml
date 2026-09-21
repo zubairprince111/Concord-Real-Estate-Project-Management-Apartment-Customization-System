@@ -1,0 +1,43 @@
+@model IEnumerable<Final.Models.ProjectLedgerModel>
+@using System.Linq
+@{
+    ViewBag.Title = "Project Ledger";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">Project Accounting Ledger & Total Collections</h3>
+</div>
+
+<div class="erp-card">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Project Name</th>
+                        <th style="text-align: right;">Total Client Payments Received (In)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td style="font-weight: 600;">@p.ProjectName</td>
+                            <td style="text-align: right; font-weight: 700; color: #16a34a;">Tk @p.TotalClientPayments.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-book-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Ledger Records</div>
+            <p style="margin: 0; font-size: 13px;">No project payment records exist in the accounting ledger.</p>
+        </div>
+    }
+</div>

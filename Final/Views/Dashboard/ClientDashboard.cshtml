@@ -1,0 +1,44 @@
+@{
+    ViewBag.Title = "Client Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="stat-kpi-grid" style="grid-template-columns: minmax(240px, 320px);">
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-blue">
+            <i class="ti ti-home-check" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">My Active Bookings</div>
+            <div class="kpi-meta-value">@ViewBag.MyBookingCount</div>
+        </div>
+    </div>
+</div>
+
+<div class="erp-section-header">
+    <h3 class="erp-section-title">Client Portal Services</h3>
+</div>
+
+<div class="action-cards-grid">
+    <a class="action-card-link" href="@Url.Action("Units", "Client")">
+        <div class="action-card-icon kpi-icon-green">
+            <i class="ti ti-home-2" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Available Units</h4>
+        <p class="action-card-desc">Browse available apartments, check floor plans, sq ft sizes, base prices, and book online.</p>
+    </a>
+    <a class="action-card-link" href="@Url.Action("MyBookings", "Client")">
+        <div class="action-card-icon kpi-icon-purple">
+            <i class="ti ti-palette" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Customize Materials</h4>
+        <p class="action-card-desc">Select interior finishing materials and upgrades for your booked flat with AI assistance.</p>
+    </a>
+    <a class="action-card-link" href="@Url.Action("Payments", "Client")">
+        <div class="action-card-icon kpi-icon-blue">
+            <i class="ti ti-receipt" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Payment History</h4>
+        <p class="action-card-desc">View installment payment records, total price breakdowns, remaining balances, and receipts.</p>
+    </a>
+</div>

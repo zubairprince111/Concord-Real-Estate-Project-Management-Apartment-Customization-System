@@ -1,0 +1,151 @@
+@{
+    ViewBag.Title = "Admin Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="stat-kpi-grid">
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-blue">
+            <i class="ti ti-briefcase" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Active Projects</div>
+            <div class="kpi-meta-value">@ViewBag.ActiveProjectCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-green">
+            <i class="ti ti-users" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Clients</div>
+            <div class="kpi-meta-value">@ViewBag.ClientCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-purple">
+            <i class="ti ti-clipboard-list" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Project Managers</div>
+            <div class="kpi-meta-value">@ViewBag.ProjectManagerCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-amber">
+            <i class="ti ti-calculator" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Accounts Officers</div>
+            <div class="kpi-meta-value">@ViewBag.AccountsOfficerCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-navy">
+            <i class="ti ti-building-skyscraper" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Total Buildings</div>
+            <div class="kpi-meta-value">@ViewBag.TotalBuildingCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-purple">
+            <i class="ti ti-home" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Total Units</div>
+            <div class="kpi-meta-value">@ViewBag.TotalUnitCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-amber">
+            <i class="ti ti-calendar-check" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Booked Units</div>
+            <div class="kpi-meta-value">@ViewBag.BookedUnitCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-blue">
+            <i class="ti ti-cash" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Sold Units</div>
+            <div class="kpi-meta-value">@ViewBag.SoldUnitCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-green">
+            <i class="ti ti-circle-check" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Available Units</div>
+            <div class="kpi-meta-value">@ViewBag.AvailableUnitCount</div>
+        </div>
+    </div>
+</div>
+
+<div class="erp-section-header">
+    <h3 class="erp-section-title">System Management Modules</h3>
+</div>
+
+<div class="action-cards-grid">
+    <div class="action-card-link" style="cursor: default;">
+        <div class="action-card-icon kpi-icon-blue">
+            <i class="ti ti-briefcase" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Manage Projects</h4>
+        <p class="action-card-desc">Create and view all real estate development projects across company locations.</p>
+    </div>
+    <div class="action-card-link" style="cursor: default;">
+        <div class="action-card-icon kpi-icon-green">
+            <i class="ti ti-building-skyscraper" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Manage Buildings</h4>
+        <p class="action-card-desc">Define individual towers, blocks, and structures within each project scope.</p>
+    </div>
+    <div class="action-card-link" style="cursor: default;">
+        <div class="action-card-icon kpi-icon-purple">
+            <i class="ti ti-home" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Manage Units</h4>
+        <p class="action-card-desc">Configure flat units, floor layouts, square footage, pricing, and availability.</p>
+    </div>
+    <div class="action-card-link" style="cursor: default;">
+        <div class="action-card-icon kpi-icon-amber">
+            <i class="ti ti-users" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Manage Users</h4>
+        <p class="action-card-desc">Administer user accounts across Admin, Client, PM, and Accounts Officer roles.</p>
+    </div>
+    <div class="action-card-link" style="cursor: default;">
+        <div class="action-card-icon kpi-icon-red">
+            <i class="ti ti-calendar-event" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Manage Bookings</h4>
+        <p class="action-card-desc">Monitor unit bookings, inspect active client contracts, and handle cancellations.</p>
+    </div>
+    <div class="action-card-link" style="cursor: default;">
+        <div class="action-card-icon kpi-icon-green">
+            <i class="ti ti-adjustments" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Customization Catalog</h4>
+        <p class="action-card-desc">Maintain master finishing options and extra cost rates available to clients.</p>
+    </div>
+    <div class="action-card-link" style="cursor: default;">
+        <div class="action-card-icon kpi-icon-blue">
+            <i class="ti ti-tags" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Product Categories</h4>
+        <p class="action-card-desc">Group finishing products into customizable and non-customizable categories.</p>
+    </div>
+    <div class="action-card-link" style="cursor: default;">
+        <div class="action-card-icon kpi-icon-purple">
+            <i class="ti ti-report-analytics" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Company Reports</h4>
+        <p class="action-card-desc">View total financial collections and project revenue rollups across all projects.</p>
+    </div>
+</div>

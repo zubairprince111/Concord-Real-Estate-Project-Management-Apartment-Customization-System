@@ -1,0 +1,111 @@
+@model Final.Models.AssignedProjectsViewModel
+@using System.Linq
+@{
+    ViewBag.Title = "Assigned Projects";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header" style="margin-bottom: 24px;">
+    <div>
+        <h3 class="erp-card-title"><i class="ti ti-user-check" style="margin-right: 8px;"></i>Project Staff Assignment</h3>
+        <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">Assign a Project Manager and an Accounts Officer to lead and monitor each project.</p>
+    </div>
+</div>
+
+@if (Model != null && Model.Projects != null && Model.Projects.Any())
+{
+    <div style="margin-bottom: 20px;">
+        <input type="text" id="assignedSearchBox" class="form-control-erp" placeholder="Search projects by name or location..." style="max-width: 360px;">
+    </div>
+
+    <div class="table-card-wrapper">
+        <table class="erp-table assigned-projects-table">
+            <thead>
+                <tr>
+                    <th style="min-width: 180px;">Project Details</th>
+                    <th style="min-width: 120px;">Budget</th>
+                    <th style="min-width: 100px;">Status</th>
+                    <th style="min-width: 220px;">Project Manager</th>
+                    <th style="min-width: 220px;">Accounts Officer</th>
+                    <th style="min-width: 110px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var project in Model.Projects)
+                {
+                    <tr data-search="@((project.ProjectName + " " + project.Location).ToLower())">
+                        <td>
+                            <div style="font-weight: 600; font-size: 15px; color: #1e293b;">@project.ProjectName</div>
+                            @if (!string.IsNullOrEmpty(project.Location))
+                            {
+                                <div style="font-size: 12px; color: #64748b;"><i class="ti ti-map-pin" style="font-size: 12px;"></i> @project.Location</div>
+                            }
+                        </td>
+                        <td>
+                            <span style="font-weight: 600; color: #0f172a;">Tk @project.Budget.ToString("N2")</span>
+                        </td>
+                        <td>
+                            <span class="status-pill status-@project.Status">@project.Status</span>
+                        </td>
+                        @using (Html.BeginForm("AssignProject", "Admin", FormMethod.Post, new { style = "display: contents;" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="projectId" value="@project.ProjectID" />
+                            <td>
+                                <select name="projectManagerId" class="form-control-erp" style="width: 100%; font-size: 13px;">
+                                    @foreach (var option in Model.ProjectManagerOptions)
+                                    {
+                                        bool isSelected = (project.ProjectManagerID.HasValue && option.Value == project.ProjectManagerID.Value.ToString()) ||
+                                                          (!project.ProjectManagerID.HasValue && string.IsNullOrEmpty(option.Value));
+                                        <option value="@option.Value" @(isSelected ? "selected" : "")>@option.Text</option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <select name="accountOfficerId" class="form-control-erp" style="width: 100%; font-size: 13px;">
+                                    @foreach (var option in Model.AccountOfficerOptions)
+                                    {
+                                        bool isSelected = (project.AccountOfficerID.HasValue && option.Value == project.AccountOfficerID.Value.ToString()) ||
+                                                          (!project.AccountOfficerID.HasValue && string.IsNullOrEmpty(option.Value));
+                                        <option value="@option.Value" @(isSelected ? "selected" : "")>@option.Text</option>
+                                    }
+                                </select>
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="submit" class="btn-erp-primary" style="padding: 6px 14px; font-size: 12px;">
+                                    <i class="ti ti-check" aria-hidden="true"></i> Save
+                                </button>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="erp-card erp-empty-state">
+        <div class="erp-empty-icon"><i class="ti ti-folder-off" aria-hidden="true"></i></div>
+        <div class="erp-empty-title">No Projects Available</div>
+        <p style="margin: 0; font-size: 13px;">No projects are available for assignment.</p>
+    </div>
+}
+
+@section scripts {
+    <script>
+        $(function () {
+            $('#assignedSearchBox').on('input', function () {
+                var searchVal = $(this).val().toLowerCase();
+                $('table.assigned-projects-table tbody tr').each(function () {
+                    var searchData = $(this).data('search') || '';
+                    if (searchData.indexOf(searchVal) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+        });
+    </script>
+}

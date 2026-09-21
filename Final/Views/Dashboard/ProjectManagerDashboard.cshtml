@@ -1,0 +1,127 @@
+@{
+    ViewBag.Title = "Project Manager Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="stat-kpi-grid">
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-amber">
+            <i class="ti ti-clipboard-check" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Pending Approvals</div>
+            <div class="kpi-meta-value">@ViewBag.PendingApprovalCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-green">
+            <i class="ti ti-circle-check" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Approved Customizations</div>
+            <div class="kpi-meta-value">@ViewBag.ApprovedCount</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-red">
+            <i class="ti ti-circle-x" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Rejected Requests</div>
+            <div class="kpi-meta-value">@ViewBag.RejectedCount</div>
+        </div>
+    </div>
+</div>
+
+<div class="erp-section-header">
+    <h3 class="erp-section-title">Project Management Operations</h3>
+</div>
+
+<div class="action-cards-grid">
+    <a class="action-card-link" href="@Url.Action("Index", "Approval")">
+        <div class="action-card-icon kpi-icon-amber">
+            <i class="ti ti-palette" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Pending Customizations</h4>
+        <p class="action-card-desc">Review, approve, or reject client customization requests with feedback remarks.</p>
+    </a>
+    <a class="action-card-link" href="@Url.Action("Index", "MaterialAssignment")">
+        <div class="action-card-icon kpi-icon-purple">
+            <i class="ti ti-box" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Assign Materials</h4>
+        <p class="action-card-desc">Assign catalog finishing materials and specifications to specific projects and buildings.</p>
+    </a>
+    <a class="action-card-link" href="@Url.Action("Index", "Project")">
+        <div class="action-card-icon kpi-icon-blue">
+            <i class="ti ti-briefcase" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Projects Overview</h4>
+        <p class="action-card-desc">Monitor assigned project schedules, budgets, completion estimates, and building scopes.</p>
+    </a>
+    <a class="action-card-link" href="@Url.Action("Index", "Building")">
+        <div class="action-card-icon kpi-icon-green">
+            <i class="ti ti-building-skyscraper" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Building Structures</h4>
+        <p class="action-card-desc">Inspect building details, floor counts, max unit allocations, and construction status.</p>
+    </a>
+    <a class="action-card-link" href="@Url.Action("Index", "Unit")">
+        <div class="action-card-icon kpi-icon-navy">
+            <i class="ti ti-home" aria-hidden="true"></i>
+        </div>
+        <h4 class="action-card-title">Unit Inventory</h4>
+        <p class="action-card-desc">Manage flat dimensions, layout specifications, and unit availability statuses.</p>
+    </a>
+</div>
+
+@{
+    var assignedProjects = ViewBag.AssignedProjects as List<Final.Models.ProjectModel>;
+}
+
+<div class="erp-section-header" style="margin-top: 32px;">
+    <h3 class="erp-section-title"><i class="ti ti-briefcase" style="margin-right: 8px;"></i>My Assigned Projects</h3>
+</div>
+
+@if (assignedProjects != null && assignedProjects.Any())
+{
+    <div class="table-card-wrapper">
+        <table class="erp-table">
+            <thead>
+                <tr>
+                    <th>Project Name</th>
+                    <th>Location</th>
+                    <th>Budget</th>
+                    <th>Assigned Accounts Officer</th>
+                    <th>Start Date</th>
+                    <th>Est. Completion</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var proj in assignedProjects)
+                {
+                    <tr>
+                        <td style="font-weight: 600; color: #0f172a;">@proj.ProjectName</td>
+                        <td>@proj.Location</td>
+                        <td style="font-weight: 600;">Tk @proj.Budget.ToString("N2")</td>
+                        <td>
+                            <span style="font-weight: 500; color: #1e293b;"><i class="ti ti-user" style="font-size: 12px; color: #10b981;"></i> @proj.AccountOfficerName</span>
+                        </td>
+                        <td>@(proj.StartDate.HasValue ? proj.StartDate.Value.ToString("dd MMM yyyy") : "—")</td>
+                        <td>@(proj.EstimatedCompletionDate.HasValue ? proj.EstimatedCompletionDate.Value.ToString("dd MMM yyyy") : "TBD")</td>
+                        <td><span class="status-pill status-@proj.Status">@proj.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="erp-card erp-empty-state">
+        <div class="erp-empty-icon"><i class="ti ti-folder-off" aria-hidden="true"></i></div>
+        <div class="erp-empty-title">No Projects Assigned</div>
+        <p style="margin: 0; font-size: 13px;">You have not been assigned to any project yet.</p>
+    </div>
+}

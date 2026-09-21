@@ -1,0 +1,67 @@
+@model IEnumerable<Final.Models.CustomizationReviewModel>
+@using System.Linq
+@{
+    ViewBag.Title = "Customization Approvals";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">Pending Customization Approval Requests</h3>
+</div>
+
+<div class="erp-card">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table approval-table">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Building</th>
+                        <th>Flat #</th>
+                        <th>Client</th>
+                        <th>Requested Product</th>
+                        <th>Price</th>
+                        <th>Selected Date</th>
+                        <th>Review Decision</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td style="font-weight: 600;">@c.ProjectName</td>
+                            <td>@c.BuildingName</td>
+                            <td>@c.FlatNumber</td>
+                            <td>@c.ClientName</td>
+                            <td style="font-weight: 600;">@c.ProductName</td>
+                            <td style="font-weight: 600;">Tk @c.Price.ToString("N2")</td>
+                            <td>@c.SelectedDate.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <form method="post" class="decision-form" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@c.SelectionID" />
+                                    <input type="text" name="remarks" class="form-control-erp" placeholder="Reason (required to reject)" style="padding: 4px 10px; font-size: 12px; width: 170px;" maxlength="500" />
+                                    <button type="submit" formaction="@Url.Action("ApproveCustomization", "Approval")" class="btn-erp-primary" style="padding: 4px 10px; font-size: 12px; background-color: #16a34a;" onclick="this.form.remarks.required = false;">
+                                        <i class="ti ti-check" aria-hidden="true"></i> Approve
+                                    </button>
+                                    <button type="submit" formaction="@Url.Action("RejectCustomization", "Approval")" class="btn-erp-danger" style="padding: 4px 10px; font-size: 12px;" onclick="this.form.remarks.required = true;">
+                                        <i class="ti ti-x" aria-hidden="true"></i> Reject
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-clipboard-check" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">All Approvals Clear</div>
+            <p style="margin: 0; font-size: 13px;">No client customization requests are currently awaiting review.</p>
+        </div>
+    }
+</div>

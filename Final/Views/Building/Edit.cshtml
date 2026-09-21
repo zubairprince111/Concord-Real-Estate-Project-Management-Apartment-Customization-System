@@ -1,0 +1,122 @@
+@model Final.Models.BuildingModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Edit Building - Concord Real Estate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/no-spinner.css" rel="stylesheet" />
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; }
+        .topbar { background-color: #1F3A5F; color: #fff; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .topbar h1 { margin: 0; font-size: 20px; font-weight: 600; }
+        .topbar .user-info { font-size: 13px; color: #c9d6e6; }
+        .topbar .user-info a { color: #fff; margin-left: 15px; text-decoration: underline; }
+        .content { padding: 30px; display: flex; justify-content: center; }
+        .form-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 30px; width: 100%; max-width: 480px; }
+        .form-card h2 { color: #1F3A5F; font-size: 20px; margin-bottom: 20px; }
+        .form-group label { font-weight: 600; color: #333; font-size: 13px; }
+        .checkbox-inline { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+        .btn-save { background-color: #1F3A5F; color: #fff; border: none; padding: 9px 22px; border-radius: 4px; font-weight: 600; }
+        .btn-save:hover { background-color: #16283F; color: #fff; }
+        .btn-cancel { padding: 9px 22px; margin-left: 8px; color: #1F3A5F; text-decoration: none; }
+        .text-danger { font-size: 12px; }
+        .validation-summary-errors { color: #b00020; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1><a href="@Url.Action("Index", "Dashboard")" style="color: inherit; text-decoration: none;">Concord Real Estate Development</a></h1>
+        <div class="user-info">
+            @Session["FullName"] (@Session["UserRole"])
+            @Html.ActionLink("Logout", "Logout", "Account")
+        </div>
+    </div>
+    <div style="background-color: #EEF2F7; padding: 8px 30px; border-bottom: 1px solid #d7e0ea; font-size: 13px;">
+        <a href="@Url.Action("Index", "Dashboard")" style="color: #1F3A5F; font-weight: 600; text-decoration: none;">Dashboard</a>
+        <span style="color: #8a99ab; margin: 0 6px;">&gt;</span>
+        <span style="color: #556174;">Edit Building</span>
+    </div>
+    <div class="content">
+        <div class="form-card">
+            <h2>Edit Building</h2>
+            @using (Html.BeginForm("Edit", "Building", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.BuildingID)
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.ProjectID, "Project")
+                    @Html.DropDownListFor(m => m.ProjectID, (IEnumerable<System.Web.Mvc.SelectListItem>)ViewBag.ProjectOptions, "-- Select Project --", new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.ProjectID, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BuildingName, "Building Name")
+                    @Html.TextBoxFor(m => m.BuildingName, new { @class = "form-control no-digits", pattern = "[^0-9]+", title = "Numbers are not allowed in the building name" })
+                    @Html.ValidationMessageFor(m => m.BuildingName, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.TotalFloors, "Total Floors")
+                    @Html.TextBoxFor(m => m.TotalFloors, new { @class = "form-control numeric-only" })
+                    @Html.ValidationMessageFor(m => m.TotalFloors, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.UnitsPerFloor, "Units Per Floor")
+                    @Html.TextBoxFor(m => m.UnitsPerFloor, new { @class = "form-control numeric-only" })
+                    @Html.ValidationMessageFor(m => m.UnitsPerFloor, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-inline">@Html.CheckBoxFor(m => m.HasParkingFacility) @Html.LabelFor(m => m.HasParkingFacility, "Parking Facility Available")</div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.EstimatedCompletionDate, "Estimated Completion Date")
+                    @Html.TextBoxFor(m => m.EstimatedCompletionDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                    @Html.ValidationMessageFor(m => m.EstimatedCompletionDate, "", new { @class = "text-danger" })
+                </div>
+
+                <button type="submit" class="btn-save">Save Changes</button>
+                @Html.ActionLink("Cancel", "Index", "Building", null, new { @class = "btn-cancel" })
+            }
+        </div>
+    </div>
+    @Scripts.Render("~/bundles/jquery")
+    <script src="~/Scripts/numeric-input.js"></script>
+    <script>
+        var projectSelectEl = document.getElementById('ProjectID');
+        var dateInputEl = document.getElementById('EstimatedCompletionDate');
+        if (projectSelectEl && dateInputEl) {
+            var applyDateBounds = function () {
+                var projectId = projectSelectEl.value;
+                if (!projectId) {
+                    dateInputEl.removeAttribute('min');
+                    dateInputEl.removeAttribute('max');
+                    return;
+                }
+                $.getJSON('@Url.Action("ProjectCompletionDate", "Building")', { projectId: projectId }, function (data) {
+                    if (data && data.startDate) {
+                        dateInputEl.setAttribute('min', data.startDate);
+                    } else {
+                        dateInputEl.removeAttribute('min');
+                    }
+                    if (data && data.completionDate) {
+                        dateInputEl.setAttribute('max', data.completionDate);
+                    } else {
+                        dateInputEl.removeAttribute('max');
+                    }
+                });
+            };
+            projectSelectEl.addEventListener('change', applyDateBounds);
+            applyDateBounds();
+        }
+    </script>
+</body>
+</html>

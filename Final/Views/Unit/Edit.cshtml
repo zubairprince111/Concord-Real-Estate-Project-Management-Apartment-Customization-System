@@ -1,0 +1,144 @@
+@model Final.Models.UnitModel
+@{
+    Layout = null;
+    var buildingOptions = ViewBag.BuildingOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem>;
+    var facingOptions = ViewBag.FacingOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem>;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Edit Unit - Concord Real Estate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/no-spinner.css" rel="stylesheet" />
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; }
+        .topbar { background-color: #1F3A5F; color: #fff; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .topbar h1 { margin: 0; font-size: 20px; font-weight: 600; }
+        .topbar .user-info { font-size: 13px; color: #c9d6e6; }
+        .topbar .user-info a { color: #fff; margin-left: 15px; text-decoration: underline; }
+        .content { padding: 30px; display: flex; justify-content: center; }
+        .form-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 30px; width: 100%; max-width: 560px; }
+        .form-card h2 { color: #1F3A5F; font-size: 20px; margin-bottom: 20px; }
+        .form-row { display: flex; gap: 16px; }
+        .form-row .form-group { flex: 1; }
+        .form-group label { font-weight: 600; color: #333; font-size: 13px; }
+        .hint { font-size: 12px; color: #888; }
+        .checkbox-inline { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+        .btn-save { background-color: #1F3A5F; color: #fff; border: none; padding: 9px 22px; border-radius: 4px; font-weight: 600; }
+        .btn-save:hover { background-color: #16283F; color: #fff; }
+        .btn-cancel { padding: 9px 22px; margin-left: 8px; color: #1F3A5F; text-decoration: none; }
+        .text-danger { font-size: 12px; }
+        .validation-summary-errors { color: #b00020; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1><a href="@Url.Action("Index", "Dashboard")" style="color: inherit; text-decoration: none;">Concord Real Estate Development</a></h1>
+        <div class="user-info">
+            @Session["FullName"] (@Session["UserRole"])
+            @Html.ActionLink("Logout", "Logout", "Account")
+        </div>
+    </div>
+    <div style="background-color: #EEF2F7; padding: 8px 30px; border-bottom: 1px solid #d7e0ea; font-size: 13px;">
+        <a href="@Url.Action("Index", "Dashboard")" style="color: #1F3A5F; font-weight: 600; text-decoration: none;">Dashboard</a>
+        <span style="color: #8a99ab; margin: 0 6px;">&gt;</span>
+        <span style="color: #556174;">Edit Unit</span>
+    </div>
+    <div class="content">
+        <div class="form-card">
+            <h2>Edit Unit</h2>
+            @using (Html.BeginForm("Edit", "Unit", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.UnitID)
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BuildingID, "Building")
+                    @Html.DropDownListFor(m => m.BuildingID, buildingOptions, "-- Select Building --", new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.BuildingID, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.FlatNumber, "Flat Number")
+                        @Html.TextBoxFor(m => m.FlatNumber, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.FlatNumber, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.FloorNumber, "Floor Number")
+                        @Html.TextBoxFor(m => m.FloorNumber, new { @class = "form-control numeric-only" })
+                        @Html.ValidationMessageFor(m => m.FloorNumber, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.SizeSqFt, "Size (SqFt)")
+                        @Html.TextBoxFor(m => m.SizeSqFt, new { @class = "form-control numeric-only" })
+                        @Html.ValidationMessageFor(m => m.SizeSqFt, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.BasePrice)
+                        @Html.TextBoxFor(m => m.BasePrice, new { @class = "form-control numeric-only" })
+                        @Html.ValidationMessageFor(m => m.BasePrice, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.BedroomCount, "Bedrooms")
+                        @Html.TextBoxFor(m => m.BedroomCount, new { @class = "form-control numeric-only" })
+                        @Html.ValidationMessageFor(m => m.BedroomCount, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.BathroomCount, "Bathrooms")
+                        @Html.TextBoxFor(m => m.BathroomCount, new { @class = "form-control numeric-only" })
+                        @Html.ValidationMessageFor(m => m.BathroomCount, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.AttachedBathrooms, "Attached Bathrooms")
+                        @Html.TextBoxFor(m => m.AttachedBathrooms, new { @class = "form-control numeric-only" })
+                        @Html.ValidationMessageFor(m => m.AttachedBathrooms, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.BalconyCount, "Balcony Count")
+                        @Html.TextBoxFor(m => m.BalconyCount, new { @class = "form-control numeric-only" })
+                        @Html.ValidationMessageFor(m => m.BalconyCount, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="checkbox-inline">@Html.CheckBoxFor(m => m.HasKitchen) @Html.LabelFor(m => m.HasKitchen, "Has Kitchen")</div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-inline">@Html.CheckBoxFor(m => m.HasHall) @Html.LabelFor(m => m.HasHall, "Has Hall")</div>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Facing)
+                    @Html.DropDownListFor(m => m.Facing, facingOptions, "-- Select Facing --", new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.Facing, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Status)
+                    @Html.TextBoxFor(m => m.Status, new { @class = "form-control", disabled = "disabled", @readonly = "readonly" })
+                    <span class="hint">Status changes only through booking/payment activity, not this form.</span>
+                </div>
+
+                <button type="submit" class="btn-save">Save Changes</button>
+                @Html.ActionLink("Cancel", "Index", "Unit", null, new { @class = "btn-cancel" })
+            }
+        </div>
+    </div>
+    <script src="~/Scripts/numeric-input.js"></script>
+</body>
+</html>

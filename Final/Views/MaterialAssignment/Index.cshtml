@@ -1,0 +1,389 @@
+@{
+    ViewBag.Title = "Material Assignment";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var projectOptions = (System.Collections.Generic.List<System.Web.Mvc.SelectListItem>)ViewBag.ProjectOptions;
+}
+
+<div class="erp-card-header">
+    <div>
+        <h3 class="erp-card-title">Assign Finishing Materials to Scope</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">
+            Specify which catalog products each project or building offers its clients. Structural categories get one product per scope. Customizable categories offer multiple variants.
+        </p>
+    </div>
+</div>
+
+<form id="tokenForm" onsubmit="return false;">@Html.AntiForgeryToken()</form>
+
+<div class="erp-card">
+    <div class="row">
+        <div class="col-md-6 form-group" style="margin-bottom: 0;">
+            <label for="projectSelect" style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 6px;">1. Select Project</label>
+            <select id="projectSelect" class="form-control-erp">
+                <option value="">-- Select Project --</option>
+                @foreach (var project in projectOptions)
+                {
+                    <option value="@project.Value">@project.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6 form-group" id="buildingGroup" style="display: none; margin-bottom: 0;">
+            <label for="buildingSelect" style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 6px;">2. Select Building (Optional)</label>
+            <select id="buildingSelect" class="form-control-erp">
+                <option value="">-- Whole project scope --</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+<div id="categories"></div>
+<div id="readiness"></div>
+
+@section scripts {
+    <script>
+        (function () {
+            var urls = {
+                buildings: '@Url.Action("Buildings", "MaterialAssignment")',
+                load: '@Url.Action("Load", "MaterialAssignment")',
+                saveStructural: '@Url.Action("SaveStructural", "MaterialAssignment")',
+                saveCustomizable: '@Url.Action("SaveCustomizable", "MaterialAssignment")',
+                setReadiness: '@Url.Action("SetReadiness", "MaterialAssignment")'
+            };
+            var token = document.querySelector('#tokenForm input[name="__RequestVerificationToken"]').value;
+            var projectSelect = document.getElementById('projectSelect');
+            var buildingSelect = document.getElementById('buildingSelect');
+            var buildingGroup = document.getElementById('buildingGroup');
+            var toasts = document.getElementById('toasts');
+            var readinessBox = document.getElementById('readiness');
+            var container = document.getElementById('categories');
+            var loadSequence = 0;
+            var cards = {};
+
+            function el(tag, className, text) {
+                var node = document.createElement(tag);
+                if (className) { node.className = className; }
+                if (text !== undefined) { node.textContent = text; }
+                return node;
+            }
+
+            function showToast(message, ok) {
+                if (!message) { return; }
+                var toast = el('div', 'alert-erp ' + (ok ? 'alert-erp-success' : 'alert-erp-danger'), message);
+                toast.style.position = 'fixed';
+                toast.style.top = '20px';
+                toast.style.right = '20px';
+                toast.style.zIndex = '2000';
+                toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                toasts.appendChild(toast);
+                setTimeout(function () {
+                    if (toast.parentNode) { toast.parentNode.removeChild(toast); }
+                }, ok ? 4000 : 6500);
+            }
+
+            function scopeLabel() {
+                var projectName = projectSelect.options[projectSelect.selectedIndex].text;
+                if (buildingSelect.value === '') { return projectName + ' (whole project)'; }
+                return buildingSelect.options[buildingSelect.selectedIndex].text;
+            }
+
+            function post(url, fields, button) {
+                var scopeAtClick = projectSelect.value + '|' + buildingSelect.value;
+                var body = new FormData();
+                body.append('__RequestVerificationToken', token);
+                Object.keys(fields).forEach(function (key) {
+                    var value = fields[key];
+                    if (value === null || value === undefined) { return; }
+                    if (Array.isArray(value)) {
+                        value.forEach(function (item) { body.append(key, item); });
+                    } else {
+                        body.append(key, value);
+                    }
+                });
+                button.disabled = true;
+                return fetch(url, { method: 'POST', credentials: 'same-origin', body: body })
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) {
+                        button.disabled = false;
+                        if (data.needsConfirmation) {
+                            if (window.confirm(data.message + '\n\nSave anyway?')) {
+                                fields.confirmed = 'true';
+                                post(url, fields, button);
+                            }
+                            return;
+                        }
+                        showToast(data.message, data.success);
+                        if (data.success) { refreshCard(fields.categoryId, scopeAtClick); }
+                    })
+                    .catch(function () {
+                        button.disabled = false;
+                        showToast('Sorry, that could not be saved. Please reload the page and try again.', false);
+                    });
+            }
+
+            function renderReadiness(r) {
+                readinessBox.textContent = '';
+                if (!r) { return; }
+                var scopeWord = buildingSelect.value !== '' ? 'building' : 'project';
+                var box = el('div', 'erp-card');
+                box.style.display = 'flex';
+                box.style.justifyContent = 'space-between';
+                box.style.alignItems = 'center';
+                box.style.flexWrap = 'wrap';
+                box.style.gap = '16px';
+
+                var left = el('div');
+                var pill = el('span', 'status-pill ' + (r.isReady ? 'status-Active' : 'status-Pending'));
+                var detail;
+                if (r.isReady) {
+                    pill.textContent = 'Ready for clients';
+                    detail = r.source === 'project-inherited'
+                        ? 'Inherited from whole project. Clients booked in this building can customize.'
+                        : 'Clients booked in this ' + scopeWord + ' can open customization menu.';
+                } else {
+                    pill.textContent = 'Not ready';
+                    detail = 'Clients booked in this ' + scopeWord + ' see "still being finalized" notice. Saving assignments does not auto-publish.';
+                }
+                left.appendChild(pill);
+                left.appendChild(el('div', 'readiness-text', detail));
+
+                var applyBox = null;
+                var overrides = r.overrides || [];
+                if (buildingSelect.value === '' && overrides.length) {
+                    left.appendChild(el('div', 'readiness-overrides', 'Buildings with own setting: ' + overrides.map(function (o) {
+                        return o.name + ' (' + (o.isReady ? 'Ready' : 'Not ready') + ')';
+                    }).join(', ') + '.'));
+                    var newState = !r.isReady;
+                    var differing = overrides.filter(function (o) { return o.isReady !== newState; });
+                    if (differing.length) {
+                        var row = el('label', 'readiness-apply');
+                        applyBox = document.createElement('input');
+                        applyBox.type = 'checkbox';
+                        applyBox.checked = !newState;
+                        row.appendChild(applyBox);
+                        row.appendChild(document.createTextNode(' Also mark ' + differing.map(function (o) { return o.name; }).join(', ') +
+                            (newState ? ' as ready' : ' as not ready')));
+                        left.appendChild(row);
+                    }
+                }
+                box.appendChild(left);
+
+                var button;
+                if (r.isReady) {
+                    button = el('button', 'btn-erp-secondary', r.source === 'project-inherited' ? 'Mark this building not ready' : 'Unmark (not ready)');
+                } else {
+                    button = el('button', 'btn-erp-primary', 'Mark this ' + scopeWord + ' as ready for clients');
+                }
+                button.type = 'button';
+                button.addEventListener('click', function () {
+                    var fields = scopeFields();
+                    fields.isReady = r.isReady ? 'false' : 'true';
+                    if (applyBox && applyBox.checked) { fields.applyToBuildings = 'true'; }
+                    button.disabled = true;
+                    var body = new FormData();
+                    body.append('__RequestVerificationToken', token);
+                    Object.keys(fields).forEach(function (key) { if (fields[key] !== null) { body.append(key, fields[key]); } });
+                    fetch(urls.setReadiness, { method: 'POST', credentials: 'same-origin', body: body })
+                        .then(function (response) { return response.json(); })
+                        .then(function (data) {
+                            showToast(data.message, data.success);
+                            if (data.success) { renderReadiness(data.readiness); } else { button.disabled = false; }
+                        })
+                        .catch(function () {
+                            button.disabled = false;
+                            showToast('Sorry, that could not be saved. Please reload page.', false);
+                        });
+                });
+                box.appendChild(button);
+                readinessBox.appendChild(box);
+            }
+
+            function scopeFields() {
+                return {
+                    projectId: projectSelect.value,
+                    buildingId: buildingSelect.value !== '' ? buildingSelect.value : null
+                };
+            }
+
+            function renderStructural(cat) {
+                var card = el('div', 'erp-card');
+                var heading = el('h4', null, cat.name + ' ');
+                heading.style.fontWeight = '700';
+                heading.style.color = '#1e293b';
+                heading.appendChild(el('span', 'status-pill status-Sold', 'Structural'));
+                card.appendChild(heading);
+
+                if (cat.options.length === 0) {
+                    card.appendChild(el('div', 'mat-note', 'No structural products in catalog for ' + cat.name + '.'));
+                    return card;
+                }
+
+                if (cat.assignedProductId === null && cat.inherited) {
+                    card.appendChild(el('div', 'alert-erp alert-erp-success',
+                        'Nothing assigned for ' + scopeLabel() + '. Currently inherits: "' + cat.inherited.description + '".'));
+                } else if (cat.assignedProductId === null) {
+                    card.appendChild(el('div', 'mat-note', 'Nothing assigned for ' + scopeLabel() + '.'));
+                }
+
+                var group = el('div', 'form-group');
+                group.appendChild(el('label', null, 'Product for ' + scopeLabel()));
+                var select = document.createElement('select');
+                select.className = 'form-control-erp';
+                var none = document.createElement('option');
+                none.value = '';
+                none.textContent = '-- None (use fallback) --';
+                select.appendChild(none);
+                cat.options.forEach(function (o) {
+                    var option = document.createElement('option');
+                    option.value = o.id;
+                    option.textContent = o.description + (parseFloat(o.extraCost) > 0 ? '  (extra Tk ' + o.extraCost + ' / sqft)' : '');
+                    select.appendChild(option);
+                });
+                select.value = cat.assignedProductId === null ? '' : String(cat.assignedProductId);
+                group.appendChild(select);
+                card.appendChild(group);
+
+                var save = el('button', 'btn-erp-primary', 'Save Structural Assignment');
+                save.type = 'button';
+                save.style.marginTop = '12px';
+                save.addEventListener('click', function () {
+                    var fields = scopeFields();
+                    fields.categoryId = cat.id;
+                    fields.productId = select.value !== '' ? select.value : null;
+                    post(urls.saveStructural, fields, save);
+                });
+                card.appendChild(save);
+                return card;
+            }
+
+            function renderCustomizable(cat) {
+                var card = el('div', 'erp-card');
+                var heading = el('h4', null, cat.name + ' ');
+                heading.style.fontWeight = '700';
+                heading.style.color = '#1e293b';
+                heading.appendChild(el('span', 'status-pill status-Approved', 'Customizable'));
+                card.appendChild(heading);
+
+                if (cat.variants.length === 0) {
+                    card.appendChild(el('div', 'mat-note', 'No customizable variants in catalog for ' + cat.name + '.'));
+                    return card;
+                }
+
+                card.appendChild(el('div', 'mat-note', 'Check variants available to ' + scopeLabel() + ':'));
+                var list = el('div', 'variant-list');
+                var boxes = [];
+                cat.variants.forEach(function (v) {
+                    var item = el('label', 'variant-item');
+                    item.style.fontWeight = '400';
+                    item.style.display = 'flex';
+                    item.style.gap = '8px';
+                    item.style.padding = '8px 0';
+                    item.style.borderBottom = '1px solid #f1f5f9';
+                    var box = document.createElement('input');
+                    box.type = 'checkbox';
+                    box.value = v.id;
+                    box.checked = v.assigned || v.viaProject;
+                    if (v.viaProject) { box.disabled = true; }
+                    item.appendChild(box);
+                    var text = el('span');
+                    text.appendChild(document.createTextNode(v.description));
+                    var meta = (parseFloat(v.extraCost) > 0 ? ' (extra Tk ' + v.extraCost + ' / sqft)' : ' (included)') +
+                        (v.viaProject ? ' — project-wide' : '');
+                    text.appendChild(el('span', 'meta', meta));
+                    item.appendChild(text);
+                    list.appendChild(item);
+                    if (!v.viaProject) { boxes.push(box); }
+                });
+                card.appendChild(list);
+
+                var save = el('button', 'btn-erp-primary', 'Save Customizable Selection');
+                save.type = 'button';
+                save.style.marginTop = '12px';
+                save.addEventListener('click', function () {
+                    var fields = scopeFields();
+                    fields.categoryId = cat.id;
+                    fields.productIds = boxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; });
+                    post(urls.saveCustomizable, fields, save);
+                });
+                card.appendChild(save);
+                return card;
+            }
+
+            function loadCategories() {
+                var request = ++loadSequence;
+                container.textContent = '';
+                readinessBox.textContent = '';
+                cards = {};
+                if (projectSelect.value === '') { return; }
+                container.appendChild(el('div', 'erp-card', 'Loading category specifications...'));
+
+                var url = urls.load + '?projectId=' + encodeURIComponent(projectSelect.value) +
+                    (buildingSelect.value !== '' ? '&buildingId=' + encodeURIComponent(buildingSelect.value) : '');
+                fetch(url, { credentials: 'same-origin' })
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) {
+                        if (request !== loadSequence) { return; }
+                        container.textContent = '';
+                        if (data.error) { showToast(data.error, false); return; }
+                        renderReadiness(data.readiness);
+                        data.categories.forEach(function (cat) {
+                            var card = cat.isCustomizable ? renderCustomizable(cat) : renderStructural(cat);
+                            cards[cat.id] = card;
+                            container.appendChild(card);
+                        });
+                    })
+                    .catch(function () {
+                        if (request !== loadSequence) { return; }
+                        container.textContent = '';
+                        showToast('Could not load categories. Reload page.', false);
+                    });
+            }
+
+            function refreshCard(categoryId, scopeAtClick) {
+                var url = urls.load + '?projectId=' + encodeURIComponent(projectSelect.value) +
+                    (buildingSelect.value !== '' ? '&buildingId=' + encodeURIComponent(buildingSelect.value) : '');
+                fetch(url, { credentials: 'same-origin' })
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) {
+                        if (data.error || scopeAtClick !== projectSelect.value + '|' + buildingSelect.value) { return; }
+                        var old = cards[categoryId];
+                        if (!old || !old.parentNode) { return; }
+                        for (var i = 0; i < data.categories.length; i++) {
+                            var cat = data.categories[i];
+                            if (String(cat.id) !== String(categoryId)) { continue; }
+                            var fresh = cat.isCustomizable ? renderCustomizable(cat) : renderStructural(cat);
+                            var y = window.scrollY;
+                            old.parentNode.replaceChild(fresh, old);
+                            cards[categoryId] = fresh;
+                            window.scrollTo(0, y);
+                            break;
+                        }
+                    });
+            }
+
+            function loadBuildings() {
+                buildingSelect.length = 1;
+                buildingSelect.value = '';
+                buildingGroup.style.display = projectSelect.value === '' ? 'none' : '';
+                if (projectSelect.value === '') { loadCategories(); return; }
+
+                var projectId = projectSelect.value;
+                fetch(urls.buildings + '?projectId=' + encodeURIComponent(projectId), { credentials: 'same-origin' })
+                    .then(function (response) { return response.json(); })
+                    .then(function (buildings) {
+                        if (projectSelect.value !== projectId) { return; }
+                        buildings.forEach(function (b) {
+                            var option = document.createElement('option');
+                            option.value = b.id;
+                            option.textContent = b.label;
+                            buildingSelect.appendChild(option);
+                        });
+                    });
+                loadCategories();
+            }
+
+            projectSelect.addEventListener('change', loadBuildings);
+            buildingSelect.addEventListener('change', loadCategories);
+        })();
+    </script>
+}

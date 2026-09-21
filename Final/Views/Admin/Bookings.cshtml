@@ -1,0 +1,84 @@
+@model IEnumerable<Final.Models.BookingAdminModel>
+@using System.Linq
+@{
+    ViewBag.Title = "Bookings";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">Client Unit Bookings Administration</h3>
+</div>
+
+<div class="erp-card">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Building</th>
+                        <th>Flat #</th>
+                        <th>Client</th>
+                        <th>Booked Date</th>
+                        <th>Total Price</th>
+                        <th>Booking Status</th>
+                        <th>Unit Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model)
+                    {
+                        <tr>
+                            <td style="font-weight: 600;">@b.ProjectName</td>
+                            <td>@b.BuildingName</td>
+                            <td>@b.FlatNumber</td>
+                            <td>@b.ClientName</td>
+                            <td>@b.BookingDate.ToString("dd MMM yyyy")</td>
+                            <td style="font-weight: 600;">Tk @b.TotalPrice.ToString("N2")</td>
+                            <td>
+                                @if (b.Status == "Active")
+                                {
+                                    <span class="status-pill status-Active">Active</span>
+                                }
+                                else
+                                {
+                                    <div>
+                                        <span class="status-pill status-Cancelled">Cancelled</span>
+                                        @if (!string.IsNullOrEmpty(b.CancelReason))
+                                        {
+                                            <div style="font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 2px;">@b.CancelReason</div>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <span class="status-pill status-@b.UnitStatus">@b.UnitStatus</span>
+                            </td>
+                            <td>
+                                @if (b.Status == "Active" && b.UnitStatus != "Sold")
+                                {
+                                    <form method="post" action="@Url.Action("CancelBooking", "Admin")" class="cancel-form" style="display: flex; gap: 8px; align-items: center;" onsubmit="return confirm('Cancel this booking? The unit will become Available again.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="bookingId" value="@b.BookingID" />
+                                        <input type="text" name="reason" class="form-control-erp" placeholder="Reason (optional)" style="padding: 4px 10px; font-size: 12px; width: 140px;" maxlength="500" />
+                                        <button type="submit" class="btn-erp-danger" style="padding: 4px 10px; font-size: 12px;">Cancel</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-calendar-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Bookings Found</div>
+            <p style="margin: 0; font-size: 13px;">No unit bookings have been made yet.</p>
+        </div>
+    }
+</div>

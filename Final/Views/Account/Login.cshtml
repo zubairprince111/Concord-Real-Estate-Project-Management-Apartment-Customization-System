@@ -1,0 +1,154 @@
+@model Final.Models.LoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In - Concord Real Estate ERP</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/no-spinner.css" rel="stylesheet" />
+    <link rel="stylesheet" href="@("https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css")">
+    <link href="~/Content/dashboard.css" rel="stylesheet" />
+    <style>
+        body {
+            background-image: url('@Url.Content("~/Content/Images/logbg.png")');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-color: #102241;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .auth-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        .auth-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .auth-brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .auth-brand-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .auth-brand-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            letter-spacing: -0.01em;
+            text-align: left;
+            line-height: 1.1;
+        }
+
+        .auth-brand-sub {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .auth-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 4px 0;
+        }
+
+        .auth-desc {
+            font-size: 13px;
+            color: #64748b;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div style="margin-bottom: 20px;">
+                <a href="@Url.Action("Index", "Home")" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 13px; color: #64748b; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">
+                    <i class="ti ti-arrow-left" aria-hidden="true" style="font-size: 16px;"></i> Back to Home Page
+                </a>
+            </div>
+
+            <div class="auth-header">
+                <div class="auth-brand-badge">
+                    <div class="auth-brand-icon">
+                        <i class="ti ti-building" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h1 class="auth-brand-name">CONCORD</h1>
+                        <div class="auth-brand-sub">Real Estate ERP</div>
+                    </div>
+                </div>
+                <h2 class="auth-title">Sign In to Dashboard</h2>
+                <p class="auth-desc">Enter your account credentials to access the portal</p>
+            </div>
+
+            @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="form-group" style="margin-bottom: 18px;">
+                    @Html.LabelFor(m => m.Email, new { @style = "font-weight: 600; font-size: 13px; color: #0f172a; margin-bottom: 6px; display: block;" })
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control-erp", placeholder = "you@concord.test" })
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger", @style = "font-size: 12px; margin-top: 4px;" })
+                </div>
+
+                <div class="form-group" style="margin-bottom: 24px;">
+                    @Html.LabelFor(m => m.Password, new { @style = "font-weight: 600; font-size: 13px; color: #0f172a; margin-bottom: 6px; display: block;" })
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control-erp" })
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger", @style = "font-size: 12px; margin-top: 4px;" })
+                </div>
+
+                <button type="submit" class="btn-erp-primary" style="width: 100%; justify-content: center; padding: 11px; font-size: 14px;">
+                    <i class="ti ti-login" aria-hidden="true"></i> Sign In
+                </button>
+            }
+
+            <div style="text-align: center; margin-top: 20px; font-size: 13px; color: #64748b;">
+                Don't have a client account? @Html.ActionLink("Sign Up", "Signup", "Account", null, new { @style = "color: #2563eb; font-weight: 600; text-decoration: none;" })
+            </div>
+        </div>
+    </div>
+</body>
+</html>

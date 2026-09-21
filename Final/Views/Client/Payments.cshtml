@@ -1,0 +1,146 @@
+@model IEnumerable<Final.Models.ClientPaymentHistoryModel>
+@using System.Linq
+@using Final.Models
+@{
+    ViewBag.Title = "Payment History";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var breakdown = ViewBag.BookingBreakdown as System.Collections.Generic.List<ClientBookingBreakdownModel>;
+}
+
+<div class="stat-kpi-grid">
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-blue">
+            <i class="ti ti-receipt" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Total Contract Value</div>
+            <div class="kpi-meta-value">Tk @(((decimal)ViewBag.TotalPrice).ToString("N2"))</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-green">
+            <i class="ti ti-cash" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Total Amount Paid</div>
+            <div class="kpi-meta-value" style="color: #16a34a;">Tk @(((decimal)ViewBag.TotalPaid).ToString("N2"))</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper @((decimal)ViewBag.Balance > 0 ? "kpi-icon-amber" : "kpi-icon-green")">
+            <i class="ti ti-wallet" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Remaining Balance Due</div>
+            <div class="kpi-meta-value" style="color: @((decimal)ViewBag.Balance > 0 ? "#b45309" : "#16a34a");">
+                Tk @(((decimal)ViewBag.Balance).ToString("N2"))
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="erp-card">
+    <div class="erp-card-header">
+        <div>
+            <h3 class="erp-card-title">Booking Financial Breakdown</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;">
+                Only <strong>approved</strong> customizations are billed to Total Price. Pending choices add upon approval.
+            </p>
+        </div>
+    </div>
+
+    @if (breakdown != null && breakdown.Any())
+    {
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Booking #</th>
+                        <th>Project Name</th>
+                        <th>Flat #</th>
+                        <th style="text-align: right;">Total Price</th>
+                        <th style="text-align: right;">Paid Amount</th>
+                        <th style="text-align: right;">Balance Due</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in breakdown)
+                    {
+                        <tr>
+                            <td style="font-weight: 700;">#@b.BookingID</td>
+                            <td style="font-weight: 600;">@b.ProjectName</td>
+                            <td>@b.FlatNumber</td>
+                            <td style="text-align: right; font-weight: 600;">Tk @b.GrandTotal.ToString("N2")</td>
+                            <td style="text-align: right; font-weight: 600; color: #16a34a;">Tk @b.Paid.ToString("N2")</td>
+                            <td style="text-align: right;">
+                                <span class="status-pill @(b.Balance > 0 ? "status-Pending" : "status-Active")">
+                                    Tk @b.Balance.ToString("N2")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-receipt-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Booking Breakdown</div>
+            <p style="margin: 0; font-size: 13px;">No active unit bookings found for payment breakdown.</p>
+        </div>
+    }
+</div>
+
+<div class="erp-card">
+    <div class="erp-card-header">
+        <h3 class="erp-card-title">Payment Transaction History</h3>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Payment Date</th>
+                        <th>Project</th>
+                        <th>Flat #</th>
+                        <th style="text-align: right;">Amount Paid</th>
+                        <th style="text-align: right;">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td>@p.PaymentDate.ToString("dd MMM yyyy")</td>
+                            <td style="font-weight: 600;">@p.ProjectName</td>
+                            <td>@p.FlatNumber</td>
+                            <td style="text-align: right; font-weight: 700; color: #16a34a;">Tk @p.Amount.ToString("N2")</td>
+                            <td style="text-align: right;">
+                                <a class="btn-erp-secondary" style="padding: 4px 10px; font-size: 12px;" href="@Url.Action("ClientPaymentReceipt", "Accounts", new { paymentId = p.PaymentID })" target="_blank">
+                                    <i class="ti ti-printer" aria-hidden="true"></i> View Receipt
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    <tr style="background-color: #f1f5f9; font-weight: 700;">
+                        <td colspan="3">Total Payments Cumulative Rollup</td>
+                        <td style="text-align: right; font-size: 16px; color: #16a34a;">Tk @Model.Sum(x => x.Amount).ToString("N2")</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-receipt-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Transactions Recorded</div>
+            <p style="margin: 0; font-size: 13px;">No installment payments have been recorded yet.</p>
+        </div>
+    }
+</div>

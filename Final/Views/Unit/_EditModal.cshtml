@@ -1,0 +1,174 @@
+@model Final.Models.UnitModel
+@{
+    var buildingOptions = ViewBag.BuildingOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem>;
+    var facingOptions = ViewBag.FacingOptions as System.Collections.Generic.List<System.Web.Mvc.SelectListItem>;
+}
+<div class="modal fade" id="editModal_@Model.UnitID" tabindex="-1" role="dialog" aria-labelledby="editModalLabel_@Model.UnitID" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);">
+            <div class="modal-header" style="background-color: var(--primary); color: #ffffff; padding: 18px 24px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #ffffff; opacity: 0.8;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editModalLabel_@Model.UnitID" style="font-size: 16px; font-weight: 700; margin: 0;">Edit Flat Unit #@Model.UnitID</h4>
+            </div>
+            @using (Html.BeginForm("Edit", "Unit", FormMethod.Post))
+            {
+                <div class="modal-body" style="padding: 24px;">
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.UnitID)
+
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        @Html.LabelFor(m => m.BuildingID, "Building", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                        @Html.DropDownListFor(m => m.BuildingID, buildingOptions, "-- Select Building --", new { @class = "form-control-erp" })
+                        @Html.ValidationMessageFor(m => m.BuildingID, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group" style="margin-bottom: 14px;">
+                            @Html.LabelFor(m => m.FlatNumber, "Flat Number", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                            @Html.TextBoxFor(m => m.FlatNumber, new { @class = "form-control-erp" })
+                            @Html.ValidationMessageFor(m => m.FlatNumber, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-md-6 form-group" style="margin-bottom: 14px;">
+                            @Html.LabelFor(m => m.FloorNumber, "Floor Number", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                            @Html.TextBoxFor(m => m.FloorNumber, new { @class = "form-control-erp numeric-only" })
+                            @Html.ValidationMessageFor(m => m.FloorNumber, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group" style="margin-bottom: 14px;">
+                            @Html.LabelFor(m => m.SizeSqFt, "Size (SqFt)", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                            @Html.TextBoxFor(m => m.SizeSqFt, new { @class = "form-control-erp numeric-only unit-edit-size-input" })
+                            <span class="edit-size-error text-danger" style="display:none; font-size:12px; margin-top:4px; font-weight:600;"></span>
+                            @Html.ValidationMessageFor(m => m.SizeSqFt, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-md-6 form-group" style="margin-bottom: 14px;">
+                            @Html.LabelFor(m => m.BasePrice, new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                            @Html.TextBoxFor(m => m.BasePrice, new { @class = "form-control-erp numeric-only" })
+                            @Html.ValidationMessageFor(m => m.BasePrice, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group" style="margin-bottom: 14px;">
+                            @Html.LabelFor(m => m.BedroomCount, "Bedrooms", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                            @Html.TextBoxFor(m => m.BedroomCount, new { @class = "form-control-erp numeric-only" })
+                            @Html.ValidationMessageFor(m => m.BedroomCount, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-md-6 form-group" style="margin-bottom: 14px;">
+                            @Html.LabelFor(m => m.BathroomCount, "Bathrooms", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                            @Html.TextBoxFor(m => m.BathroomCount, new { @class = "form-control-erp numeric-only" })
+                            @Html.ValidationMessageFor(m => m.BathroomCount, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group" style="margin-bottom: 14px;">
+                            @Html.LabelFor(m => m.AttachedBathrooms, "Attached Bathrooms", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                            @Html.TextBoxFor(m => m.AttachedBathrooms, new { @class = "form-control-erp numeric-only" })
+                            @Html.ValidationMessageFor(m => m.AttachedBathrooms, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-md-6 form-group" style="margin-bottom: 14px;">
+                            @Html.LabelFor(m => m.BalconyCount, "Balcony Count", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                            @Html.TextBoxFor(m => m.BalconyCount, new { @class = "form-control-erp numeric-only" })
+                            @Html.ValidationMessageFor(m => m.BalconyCount, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 14px;">
+                        <div class="col-md-6">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                @Html.CheckBoxFor(m => m.HasKitchen, new { @style = "width: 16px; height: 16px;" })
+                                @Html.LabelFor(m => m.HasKitchen, "Has Kitchen", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main); margin: 0;" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                @Html.CheckBoxFor(m => m.HasHall, new { @style = "width: 16px; height: 16px;" })
+                                @Html.LabelFor(m => m.HasHall, "Has Hall", new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main); margin: 0;" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        @Html.LabelFor(m => m.Facing, new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                        @Html.DropDownListFor(m => m.Facing, facingOptions, "-- Select Facing --", new { @class = "form-control-erp" })
+                        @Html.ValidationMessageFor(m => m.Facing, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        @Html.LabelFor(m => m.Status, new { @style = "font-weight: 600; font-size: 13px; color: var(--text-main);" })
+                        @Html.TextBoxFor(m => m.Status, new { @class = "form-control-erp", disabled = "disabled", @readonly = "readonly" })
+                        <span style="font-size: 11.5px; color: var(--text-muted);">Status updates automatically via booking and payment activities.</span>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px;">
+                    <button type="button" class="btn-erp-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-erp-primary btn-save-edit-unit">Save Changes</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var modal = document.getElementById('editModal_@Model.UnitID');
+        if (!modal) return;
+
+        var buildingSelect = modal.querySelector('select[name="BuildingID"]');
+        var sizeInput = modal.querySelector('.unit-edit-size-input');
+        var errSpan = modal.querySelector('.edit-size-error');
+        var saveBtn = modal.querySelector('.btn-save-edit-unit');
+        var projectArea = null;
+
+        function fetchProjectAreaAndValidate() {
+            if (!buildingSelect || !buildingSelect.value) return;
+            $.getJSON('@Url.Action("BuildingInfo", "Unit")', { buildingId: buildingSelect.value }, function (data) {
+                projectArea = (data && data.totalAreaSqFt) ? parseFloat(data.totalAreaSqFt) : null;
+                validateEditSize();
+            });
+        }
+
+        function validateEditSize() {
+            if (!sizeInput) return true;
+            var val = parseFloat(sizeInput.value.replace(/,/g, '').trim());
+            if (projectArea && projectArea > 0 && !isNaN(val) && val >= projectArea) {
+                sizeInput.style.border = '2px solid #dc2626';
+                if (errSpan) {
+                    errSpan.textContent = 'Unit size (' + val.toLocaleString() + ' SqFt) is larger than or equal to project total area (' + projectArea.toLocaleString() + ' SqFt). It must be less than the project size.';
+                    errSpan.style.display = 'block';
+                }
+                if (saveBtn) saveBtn.disabled = true;
+                return false;
+            } else {
+                sizeInput.style.border = '';
+                if (errSpan) errSpan.style.display = 'none';
+                if (saveBtn) saveBtn.disabled = false;
+                return true;
+            }
+        }
+
+        if (buildingSelect) {
+            buildingSelect.addEventListener('change', fetchProjectAreaAndValidate);
+            fetchProjectAreaAndValidate();
+        }
+
+        if (sizeInput) {
+            sizeInput.addEventListener('input', validateEditSize);
+            sizeInput.addEventListener('keyup', validateEditSize);
+            sizeInput.addEventListener('change', validateEditSize);
+            sizeInput.addEventListener('blur', validateEditSize);
+        }
+
+        var form = modal.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (!validateEditSize()) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+    })();
+</script>

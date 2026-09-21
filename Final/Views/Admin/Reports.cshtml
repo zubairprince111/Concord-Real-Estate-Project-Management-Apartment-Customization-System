@@ -1,0 +1,167 @@
+@model Final.Models.AdminReportsViewModel
+@using System.Linq
+@{
+    ViewBag.Title = "Company Reports";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+
+    decimal totalCollections = Model != null && Model.ProjectSummaries != null ? Model.ProjectSummaries.Sum(x => x.TotalClientPayments) : 0m;
+    int transactionCount = Model != null && Model.RecentTransactions != null ? Model.RecentTransactions.Count : 0;
+}
+
+<div class="stat-kpi-grid">
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-green">
+            <i class="ti ti-cash" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Total Client Collections</div>
+            <div class="kpi-meta-value" style="color: #16a34a;">Tk @totalCollections.ToString("N2")</div>
+        </div>
+    </div>
+    <div class="stat-kpi-card">
+        <div class="kpi-icon-wrapper kpi-icon-blue">
+            <i class="ti ti-receipt" aria-hidden="true"></i>
+        </div>
+        <div>
+            <div class="kpi-meta-label">Recorded Transactions</div>
+            <div class="kpi-meta-value">@transactionCount</div>
+        </div>
+    </div>
+</div>
+
+<div class="erp-card" style="margin-bottom: 24px;">
+    <div class="erp-card-header">
+        <h3 class="erp-card-title"><i class="ti ti-report-analytics" style="margin-right: 8px;"></i>Project Revenue Summary</h3>
+    </div>
+
+    @if (Model != null && Model.ProjectSummaries != null && Model.ProjectSummaries.Any())
+    {
+        <div style="margin-bottom: 16px;">
+            <input type="text" id="reportSearchBox" class="form-control-erp" placeholder="Search by project name..." style="max-width: 300px;">
+        </div>
+
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table project-summary-table">
+                <thead>
+                    <tr>
+                        <th>Project Name</th>
+                        <th style="text-align: right;">Total Client Payments Received (In)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.ProjectSummaries)
+                    {
+                        <tr data-name="@r.ProjectName.ToLower()">
+                            <td style="font-weight: 600; color: #0f172a;">@r.ProjectName</td>
+                            <td style="text-align: right; font-weight: 600; color: #16a34a;">Tk @r.TotalClientPayments.ToString("N2")</td>
+                        </tr>
+                    }
+                    <tr style="background-color: #f1f5f9; font-weight: 700;">
+                        <td>All Projects Total Rollup</td>
+                        <td style="text-align: right; font-size: 16px; color: #2563eb;">Tk @totalCollections.ToString("N2")</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-chart-dots-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Projects Found</div>
+            <p style="margin: 0; font-size: 13px;">No projects exist to generate financial reports.</p>
+        </div>
+    }
+</div>
+
+<!-- Client Payment & Recent Transaction History Card (Read-only View for Admin) -->
+<div class="erp-card">
+    <div class="erp-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 class="erp-card-title"><i class="ti ti-history" style="margin-right: 8px;"></i>Client Payment Transaction History</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;">
+                Live feed of all client installment payments and updated transactions recorded across projects (View Only).
+            </p>
+        </div>
+    </div>
+
+    @if (Model != null && Model.RecentTransactions != null && Model.RecentTransactions.Any())
+    {
+        <div style="margin-bottom: 16px;">
+            <input type="text" id="txSearchBox" class="form-control-erp" placeholder="Search by client, project, or flat..." style="max-width: 320px;">
+        </div>
+
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table recent-tx-table">
+                <thead>
+                    <tr>
+                        <th>Receipt #</th>
+                        <th>Payment Date</th>
+                        <th>Client Name</th>
+                        <th>Project</th>
+                        <th>Flat #</th>
+                        <th style="text-align: right;">Amount Paid</th>
+                        <th>Recorded By</th>
+                        <th style="text-align: right;">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tx in Model.RecentTransactions)
+                    {
+                        <tr data-search="@((tx.ClientName + " " + tx.ProjectName + " " + tx.FlatNumber).ToLower())">
+                            <td style="font-weight: 700; color: #64748b;">#@tx.PaymentID</td>
+                            <td>@tx.PaymentDate.ToString("dd MMM yyyy, hh:mm tt")</td>
+                            <td style="font-weight: 600; color: #0f172a;">
+                                <i class="ti ti-user" style="font-size: 12px; color: #3b82f6;"></i> @tx.ClientName
+                            </td>
+                            <td style="font-weight: 600;">@tx.ProjectName</td>
+                            <td><span class="status-pill status-Active" style="font-size: 11px;">Flat @tx.FlatNumber</span></td>
+                            <td style="text-align: right; font-weight: 700; color: #16a34a;">Tk @tx.Amount.ToString("N2")</td>
+                            <td style="font-size: 12px; color: #64748b;">@tx.RecordedByName</td>
+                            <td style="text-align: right;">
+                                <a class="btn-erp-secondary" style="padding: 4px 10px; font-size: 12px;" href="@Url.Action("ClientPaymentReceipt", "Accounts", new { paymentId = tx.PaymentID })" target="_blank">
+                                    <i class="ti ti-printer" aria-hidden="true"></i> View Receipt
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    <tr style="background-color: #f1f5f9; font-weight: 700;">
+                        <td colspan="5">Recent Transactions Total Cumulative Rollup</td>
+                        <td style="text-align: right; font-size: 16px; color: #16a34a;">Tk @Model.RecentTransactions.Sum(x => x.Amount).ToString("N2")</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-receipt-off" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Transactions Recorded</div>
+            <p style="margin: 0; font-size: 13px;">No client payments have been recorded yet.</p>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            $('#reportSearchBox').on('input', function () {
+                var searchText = $(this).val().toLowerCase();
+                $('table.project-summary-table tbody tr[data-name]').each(function () {
+                    var matchesName = $(this).attr('data-name').indexOf(searchText) !== -1;
+                    $(this).toggle(matchesName);
+                });
+            });
+
+            $('#txSearchBox').on('input', function () {
+                var searchVal = $(this).val().toLowerCase();
+                $('table.recent-tx-table tbody tr[data-search]').each(function () {
+                    var searchData = $(this).data('search') || '';
+                    $(this).toggle(searchData.indexOf(searchVal) !== -1);
+                });
+            });
+        });
+    </script>
+}

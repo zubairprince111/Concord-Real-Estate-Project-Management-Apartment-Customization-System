@@ -1,0 +1,161 @@
+@model IEnumerable<Final.Models.ClientBookingSummary>
+@using System.Linq
+@{
+    ViewBag.Title = "My Bookings";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">My Booked Flat Units & Customizations</h3>
+</div>
+
+<div class="erp-card">
+    @if (ViewBag.NotReadyNotice != null)
+    {
+        <div class="alert-erp alert-erp-danger">
+            <i class="ti ti-info-circle" aria-hidden="true"></i>
+            <span>@ViewBag.NotReadyNotice</span>
+        </div>
+    }
+    <div id="liveNotice"></div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-card-wrapper" style="margin-bottom: 0;">
+            <table class="erp-table req-table">
+                <thead>
+                    <tr>
+                        <th>Booking #</th>
+                        <th>Project</th>
+                        <th>Building</th>
+                        <th>Flat #</th>
+                        <th>Booked Date</th>
+                        <th>Total Price</th>
+                        <th>Expected Completion</th>
+                        <th>Customizations</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model)
+                    {
+                        <tr>
+                            <td style="font-weight: 700;">#@b.BookingID</td>
+                            <td style="font-weight: 600;">@b.ProjectName</td>
+                            <td>@b.BuildingName</td>
+                            <td>@b.FlatNumber</td>
+                            <td>@b.BookingDate.ToString("dd MMM yyyy")</td>
+                            <td style="font-weight: 700; color: #2563eb;">Tk @b.TotalPrice.ToString("N2")</td>
+                            <td>@(b.EstimatedCompletionDate.HasValue ? b.EstimatedCompletionDate.Value.ToString("dd MMM yyyy") : "TBD")</td>
+                            <td>
+                                <span style="font-weight: 600;">@b.CustomizationCount</span> items
+                                @if (b.CustomizationCount > 0)
+                                {
+                                    <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                                        @string.Join(" \u00b7 ", new[] {
+                                            b.ApprovedCount > 0 ? b.ApprovedCount + " approved" : null,
+                                            b.PendingCount > 0 ? b.PendingCount + " pending" : null,
+                                            b.RejectedCount > 0 ? b.RejectedCount + " rejected" : null }.Where(x => x != null))
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                @if (b.CustomizationReady)
+                                {
+                                    <button type="button" class="btn-erp-primary" style="padding: 4px 12px; font-size: 12px;" data-customize="@b.BookingID">
+                                        <i class="ti ti-palette" aria-hidden="true"></i> Customize
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn-erp-secondary" style="padding: 4px 12px; font-size: 12px;" disabled title="@ViewBag.NotReadyMessage">Customize</button>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Still being finalized for your building.</div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">
+            Note: Total Price counts only <strong>approved</strong> customization options. Pending choices are billed once approved by the Project Manager.
+        </p>
+    }
+    else
+    {
+        <div class="erp-empty-state">
+            <div class="erp-empty-icon"><i class="ti ti-home-question" aria-hidden="true"></i></div>
+            <div class="erp-empty-title">No Active Bookings</div>
+            <p style="margin: 0; font-size: 13px;">You have no active unit bookings yet. Browse Available Units to book an apartment.</p>
+        </div>
+    }
+</div>
+
+@{
+    var customizeModels = ViewBag.CustomizeModels as System.Collections.Generic.Dictionary<int, Final.Models.CustomizeViewModel>;
+}
+@if (Model != null && customizeModels != null)
+{
+    foreach (var b in Model)
+    {
+        if (customizeModels.ContainsKey(b.BookingID) && customizeModels[b.BookingID] != null)
+        {
+            @Html.Partial("_CustomizeModal", customizeModels[b.BookingID])
+        }
+    }
+}
+
+@section scripts {
+    <script>
+        $(function () {
+            var modalToOpen = '@ViewBag.OpenModalId';
+            if (modalToOpen) {
+                $('#' + modalToOpen).modal('show');
+            }
+        });
+
+        (function () {
+            var notReadyMessage = '@Html.Raw(HttpUtility.JavaScriptStringEncode((string)ViewBag.NotReadyMessage))';
+            var checkFailedMessage = 'We could not check whether customization is available right now. Please try again.';
+
+            function showNotice(text) {
+                var box = document.getElementById('liveNotice');
+                box.textContent = '';
+                var note = document.createElement('div');
+                note.className = 'alert-erp alert-erp-danger';
+                note.textContent = text;
+                box.appendChild(note);
+            }
+
+            function block(button, modalId, message) {
+                var $modal = $('#' + modalId);
+                $modal.modal('hide');
+                $modal.remove();
+                button.disabled = true;
+                button.title = message;
+                showNotice(message);
+            }
+
+            $(document).on('click', 'button[data-customize]', function () {
+                var button = this;
+                var bookingId = button.getAttribute('data-customize');
+                var modalId = 'customizeModal_' + bookingId;
+                button.disabled = true;
+                fetch('@Url.Action("CustomizationStatus", "Client")?bookingId=' + encodeURIComponent(bookingId), { credentials: 'same-origin', cache: 'no-store' })
+                    .then(function (response) { if (!response.ok) { throw new Error('status ' + response.status); } return response.json(); })
+                    .then(function (data) {
+                        if (data.ready && document.getElementById(modalId)) {
+                            button.disabled = false;
+                            $('#' + modalId).modal('show');
+                        } else {
+                            block(button, modalId, data.message || notReadyMessage);
+                        }
+                    })
+                    .catch(function () {
+                        button.disabled = false;
+                        showNotice(checkFailedMessage);
+                    });
+            });
+        })();
+    </script>
+}

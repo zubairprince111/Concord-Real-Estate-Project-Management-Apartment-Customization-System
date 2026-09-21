@@ -1,0 +1,157 @@
+@model IEnumerable<Final.Models.UnitModel>
+@using System.Linq
+@{
+    ViewBag.Title = "Units";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="erp-card-header">
+    <h3 class="erp-card-title">Flat Unit Inventory</h3>
+    @if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+    {
+        <div class="header-actions">
+            <button type="button" class="btn-erp-primary" data-toggle="modal" data-target="#generateUnitsModal">
+                <i class="ti ti-plus" aria-hidden="true"></i>
+                <span>Generate Units</span>
+            </button>
+        </div>
+    }
+</div>
+
+@{ string searchTerm = ViewBag.SearchTerm as string; }
+<div style="margin-bottom: 20px;">
+    @using (Html.BeginForm("Index", "Unit", FormMethod.Get, new { id = "unitSearchForm" }))
+    {
+        <input type="text" id="unitSearchBox" name="search" value="@searchTerm" class="form-control-erp" placeholder="Search by flat #, building, or project..." style="max-width: 340px;">
+    }
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="project-groups-wrapper">
+        @foreach (var projectGroup in Model.GroupBy(u => new { u.ProjectID, u.ProjectName }))
+        {
+            <div class="project-group erp-card" style="padding: 24px; margin-bottom: 24px;">
+                <h4 style="font-size: 17px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="ti ti-briefcase" style="color: #2563eb;" aria-hidden="true"></i>
+                    @projectGroup.Key.ProjectName
+                </h4>
+                
+                @foreach (var buildingGroup in projectGroup.GroupBy(u => new { u.BuildingID, u.BuildingName }))
+                {
+                    <div class="building-group" style="margin-bottom: 20px;">
+                        <h5 style="font-size: 14px; font-weight: 600; color: #475569; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
+                            <i class="ti ti-building-skyscraper" aria-hidden="true"></i>
+                            @buildingGroup.Key.BuildingName
+                        </h5>
+                        
+                        <div class="table-card-wrapper" style="margin-bottom: 0;">
+                            <table class="erp-table project-table">
+                                <thead>
+                                    <tr>
+                                        <th>Flat #</th>
+                                        <th>Floor</th>
+                                        <th>Size (SqFt)</th>
+                                        <th>BHK</th>
+                                        <th>Facing</th>
+                                        <th>Base Price</th>
+                                        <th>Status</th>
+                                        @if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+                                        {
+                                            <th>Action</th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var unit in buildingGroup)
+                                    {
+                                        <tr>
+                                            <td style="font-weight: 600;">@unit.FlatNumber</td>
+                                            <td>@unit.FloorNumber</td>
+                                            <td>@unit.SizeSqFt.ToString("N2")</td>
+                                            <td>@unit.BhkSummary</td>
+                                            <td>@unit.Facing</td>
+                                            <td style="font-weight: 600;">Tk @unit.BasePrice.ToString("N2")</td>
+                                            <td><span class="status-pill status-@unit.Status">@unit.Status</span></td>
+                                            @if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+                                            {
+                                                if (unit.Status == "Available")
+                                                {
+                                                    <td>
+                                                        <a href="#" class="btn-erp-secondary" style="padding: 4px 10px; font-size: 12px;" data-toggle="modal" data-target="#editModal_@unit.UnitID">
+                                                            <i class="ti ti-edit" aria-hidden="true"></i> Edit
+                                                        </a>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td><span class="status-pill status-Inactive" style="font-size: 11px;">Locked</span></td>
+                                                }
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="erp-card erp-empty-state">
+        <div class="erp-empty-icon"><i class="ti ti-home-off" aria-hidden="true"></i></div>
+        <div class="erp-empty-title">No Units Found</div>
+        <p style="margin: 0; font-size: 13px;">@(string.IsNullOrWhiteSpace(searchTerm) ? "No units have been generated yet." : "No flat units match your search query.")</p>
+    </div>
+}
+
+@if (Session["UserRole"] != null && Session["UserRole"].ToString() == "Admin")
+{
+    @Html.Partial("_GenerateUnitsModal", (ViewData["GenerateFormModel"] as Final.Models.GenerateUnitsViewModel) ?? new Final.Models.GenerateUnitsViewModel())
+
+    if (Model != null)
+    {
+        foreach (var unit in Model)
+        {
+            if (unit.Status != "Available") { continue; }
+            var editFormModel = (ViewData["EditFormModel_" + unit.UnitID] as Final.Models.UnitModel) ?? unit;
+            @Html.Partial("_EditModal", editFormModel)
+        }
+    }
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script src="~/Scripts/numeric-input.js"></script>
+    <script>
+        $(function () {
+            var modalToOpen = '@ViewBag.OpenModalId';
+            if (modalToOpen) {
+                $('#' + modalToOpen).modal('show');
+            }
+        });
+    </script>
+    <script>
+        (function () {
+            var form = document.getElementById('unitSearchForm');
+            var searchBox = document.getElementById('unitSearchBox');
+            if (!form || !searchBox) { return; }
+
+            var debounceTimer = null;
+            searchBox.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () { form.submit(); }, 500);
+            });
+
+            if (searchBox.value) {
+                searchBox.focus();
+                var currentValue = searchBox.value;
+                searchBox.value = '';
+                searchBox.value = currentValue;
+            }
+        })();
+    </script>
+}
