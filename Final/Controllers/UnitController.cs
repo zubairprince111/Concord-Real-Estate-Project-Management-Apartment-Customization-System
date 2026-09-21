@@ -23,7 +23,7 @@ namespace Final.Controllers
                 @"SELECT b.BuildingID, p.ProjectName, b.BuildingName
                   FROM Buildings b
                   JOIN Projects p ON p.ProjectID = b.ProjectID
-                  ORDER BY p.ProjectName, b.BuildingName");
+                  ORDER BY b.BuildingID DESC");
 
             var options = new List<SelectListItem>();
             foreach (DataRow row in table.Rows)
@@ -537,7 +537,8 @@ namespace Final.Controllers
                 Facing = row["Facing"] == DBNull.Value ? null : row["Facing"].ToString(),
                 BasePrice = (decimal)row["BasePrice"],
                 Status = row["Status"].ToString(),
-                EstimatedCompletionDate = row["EstimatedCompletionDate"] == DBNull.Value ? (DateTime?)null : (DateTime)row["EstimatedCompletionDate"]
+                EstimatedCompletionDate = row["EstimatedCompletionDate"] == DBNull.Value ? (DateTime?)null : (DateTime)row["EstimatedCompletionDate"],
+                CustomizationReady = row.Table.Columns.Contains("CustomizationReady") && row["CustomizationReady"] != DBNull.Value && Convert.ToInt32(row["CustomizationReady"]) == 1
             };
         }
     }

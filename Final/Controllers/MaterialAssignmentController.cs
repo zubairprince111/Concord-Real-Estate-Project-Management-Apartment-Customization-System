@@ -39,7 +39,7 @@ namespace Final.Controllers
             if (guard != null) return guard;
 
             var projectOptions = new List<SelectListItem>();
-            foreach (DataRow row in DbHelper.QueryTable("SELECT ProjectID, ProjectName FROM Projects ORDER BY ProjectName").Rows)
+            foreach (DataRow row in DbHelper.QueryTable("SELECT ProjectID, ProjectName FROM Projects ORDER BY ProjectID DESC").Rows)
             {
                 projectOptions.Add(new SelectListItem
                 {
@@ -111,7 +111,7 @@ namespace Final.Controllers
                       FROM MaterialAssignmentStatus s
                       JOIN Buildings b ON b.BuildingID = s.BuildingID
                       WHERE s.ProjectID = @ProjectID
-                      ORDER BY b.BuildingName",
+                      ORDER BY b.BuildingID DESC",
                     new SqlParameter("@ProjectID", projectId)).Rows)
                 {
                     overrides.Add(new { buildingId = (int)row["BuildingID"], name = row["BuildingName"].ToString(), isReady = (bool)row["IsReady"] });
@@ -150,7 +150,7 @@ namespace Final.Controllers
                   FROM Buildings b
                   JOIN Projects p ON p.ProjectID = b.ProjectID
                   WHERE b.ProjectID = @ProjectID
-                  ORDER BY b.BuildingName",
+                  ORDER BY b.BuildingID DESC",
                 new SqlParameter("@ProjectID", projectId));
 
             var buildings = new List<object>();
@@ -178,7 +178,7 @@ namespace Final.Controllers
 
             var categories = new List<object>();
             foreach (DataRow cat in DbHelper.QueryTable(
-                "SELECT CategoryID, CategoryName, IsCustomizable FROM MasterCategories ORDER BY IsCustomizable, CategoryName").Rows)
+                "SELECT CategoryID, CategoryName, IsCustomizable FROM MasterCategories ORDER BY CategoryID DESC").Rows)
             {
                 int categoryId = (int)cat["CategoryID"];
                 bool isCustomizable = (bool)cat["IsCustomizable"];
@@ -197,7 +197,7 @@ namespace Final.Controllers
                                       THEN 1 ELSE 0 END AS ViaProject
                           FROM Products p
                           WHERE p.CategoryID = @CategoryID AND p.Category = 'Customizable' AND p.IsApprovedForClientCustomization = 1
-                          ORDER BY p.ProductID",
+                          ORDER BY p.ProductID DESC",
                         new SqlParameter("@CategoryID", categoryId),
                         new SqlParameter("@ProjectID", projectId),
                         BuildingParam(buildingId)).Rows)
@@ -224,7 +224,7 @@ namespace Final.Controllers
 
                 var options = new List<object>();
                 foreach (DataRow o in DbHelper.QueryTable(
-                    "SELECT ProductID, Description, ExtraCost FROM Products WHERE CategoryID = @CategoryID ORDER BY ProductID",
+                    "SELECT ProductID, Description, ExtraCost FROM Products WHERE CategoryID = @CategoryID ORDER BY ProductID DESC",
                     new SqlParameter("@CategoryID", categoryId)).Rows)
                 {
                     options.Add(new
@@ -241,7 +241,7 @@ namespace Final.Controllers
                       JOIN Products x ON x.ProductID = a.ProductID
                       WHERE x.CategoryID = @CategoryID AND a.ProjectID = @ProjectID
                         AND ((@BuildingID IS NULL AND a.BuildingID IS NULL) OR a.BuildingID = @BuildingID)
-                      ORDER BY a.ProductID",
+                      ORDER BY a.ProductID DESC",
                     new SqlParameter("@CategoryID", categoryId),
                     new SqlParameter("@ProjectID", projectId),
                     BuildingParam(buildingId));
@@ -257,7 +257,7 @@ namespace Final.Controllers
                             @"SELECT TOP 1 x.Description
                               FROM ProductScopeAssignments a JOIN Products x ON x.ProductID = a.ProductID
                               WHERE x.CategoryID = @CategoryID AND a.ProjectID = @ProjectID AND a.BuildingID IS NULL
-                              ORDER BY a.ProductID",
+                              ORDER BY a.ProductID DESC",
                             new SqlParameter("@CategoryID", categoryId),
                             new SqlParameter("@ProjectID", projectId));
                         level = "the whole project";
@@ -268,7 +268,7 @@ namespace Final.Controllers
                             @"SELECT TOP 1 x.Description
                               FROM ProductScopeAssignments a JOIN Products x ON x.ProductID = a.ProductID
                               WHERE x.CategoryID = @CategoryID AND a.ProjectID IS NULL AND a.BuildingID IS NULL
-                              ORDER BY a.ProductID",
+                              ORDER BY a.ProductID DESC",
                             new SqlParameter("@CategoryID", categoryId));
                         level = "all projects (global)";
                     }
@@ -488,7 +488,7 @@ namespace Final.Controllers
                              (SELECT 1 FROM ProductScopeAssignments a3
                               WHERE a3.ProductID = cs.ProductID AND a3.ProjectID = @ProjectID AND a3.BuildingID IS NULL))
                   GROUP BY cs.ProductID, p.Description
-                  ORDER BY cs.ProductID",
+                  ORDER BY cs.ProductID DESC",
                 parameters.ToArray());
 
             if (affected.Rows.Count == 0)

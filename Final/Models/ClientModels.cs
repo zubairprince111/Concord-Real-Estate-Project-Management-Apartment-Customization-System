@@ -94,6 +94,9 @@ namespace Final.Models
         // From the parent Project; null if not yet determined.
         public DateTime? EstimatedCompletionDate { get; set; }
 
+        // PM readiness gate for material setup
+        public bool CustomizationReady { get; set; }
+
         public string BhkSummary
         {
             get
@@ -281,6 +284,7 @@ namespace Final.Models
         public int PaymentID { get; set; }
         public DateTime PaymentDate { get; set; }
         public string ProjectName { get; set; }
+        public string BuildingName { get; set; }
         public string FlatNumber { get; set; }
         public decimal Amount { get; set; }
     }
@@ -291,6 +295,7 @@ namespace Final.Models
     {
         public int BookingID { get; set; }
         public string ProjectName { get; set; }
+        public string BuildingName { get; set; }
         public string FlatNumber { get; set; }
         public decimal TotalPrice { get; set; }
         public decimal ExtraTotal { get; set; }

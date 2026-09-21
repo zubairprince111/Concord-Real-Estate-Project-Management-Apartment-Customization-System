@@ -105,13 +105,6 @@ namespace Final.Controllers
 
             int userId = (int)Session["UserID"];
 
-            ViewBag.PendingApprovalCount = (int)DbHelper.ExecuteScalar(
-                "SELECT COUNT(*) FROM CustomizationSelections WHERE Status = 'Pending'");
-            ViewBag.ApprovedCount = (int)DbHelper.ExecuteScalar(
-                "SELECT COUNT(*) FROM CustomizationSelections WHERE Status = 'Approved'");
-            ViewBag.RejectedCount = (int)DbHelper.ExecuteScalar(
-                "SELECT COUNT(*) FROM CustomizationSelections WHERE Status = 'Rejected'");
-
             // Fetch assigned projects for this PM
             DataTable pmProjectsTable = DbHelper.QueryTable(
                 @"SELECT p.ProjectID, p.ProjectName, p.Location, p.Budget, p.StartDate, p.EstimatedCompletionDate,

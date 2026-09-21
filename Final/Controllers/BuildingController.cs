@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -19,7 +19,7 @@ namespace Final.Controllers
         private List<SelectListItem> GetProjectOptions()
         {
             DataTable table = DbHelper.QueryTable(
-                "SELECT ProjectID, ProjectName FROM Projects ORDER BY ProjectName");
+                "SELECT ProjectID, ProjectName FROM Projects ORDER BY ProjectID DESC");
 
             var options = new List<SelectListItem>();
             foreach (DataRow row in table.Rows)
@@ -45,7 +45,7 @@ namespace Final.Controllers
                   FROM Projects p
                   WHERE p.MaxBuildings IS NULL
                      OR (SELECT COUNT(*) FROM Buildings b WHERE b.ProjectID = p.ProjectID) < p.MaxBuildings
-                  ORDER BY p.ProjectName");
+                  ORDER BY p.ProjectID DESC");
 
             var options = new List<SelectListItem>();
             foreach (DataRow row in table.Rows)
@@ -65,7 +65,7 @@ namespace Final.Controllers
         public static Dictionary<int, string> GetBuildingNamesByProject()
         {
             DataTable table = DbHelper.QueryTable(
-                "SELECT ProjectID, BuildingName FROM Buildings ORDER BY ProjectID, BuildingName");
+                "SELECT ProjectID, BuildingName FROM Buildings ORDER BY BuildingID DESC");
 
             var result = new Dictionary<int, string>();
             foreach (DataRow row in table.Rows)

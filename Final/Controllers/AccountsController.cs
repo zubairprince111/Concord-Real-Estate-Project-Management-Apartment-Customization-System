@@ -74,7 +74,7 @@ namespace Final.Controllers
                   JOIN UnitBookings b ON b.BookingID = cs.BookingID
                   JOIN Units u ON u.UnitID = b.UnitID
                   WHERE mc.IsCustomizable = 1
-                  ORDER BY cs.BookingID, cs.SelectionID").Rows)
+                  ORDER BY cs.SelectionID DESC").Rows)
             {
                 int selBooking = (int)sRow["BookingID"];
                 if (!selectionsByBooking.ContainsKey(selBooking))
@@ -298,7 +298,7 @@ namespace Final.Controllers
                 @"SELECT p.ProjectID, p.ProjectName,
                          ISNULL((SELECT SUM(cp.Amount) FROM ClientPayments cp WHERE cp.ProjectID = p.ProjectID), 0) AS TotalClientPayments
                   FROM Projects p
-                  ORDER BY p.ProjectName");
+                  ORDER BY p.ProjectID DESC");
 
             var ledger = new List<ProjectLedgerModel>();
             foreach (DataRow row in table.Rows)

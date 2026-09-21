@@ -46,20 +46,194 @@
                             <td style="font-weight: 700; color: #2563eb;">Tk @u.BasePrice.ToString("N2")</td>
                             <td>@(u.EstimatedCompletionDate.HasValue ? u.EstimatedCompletionDate.Value.ToString("dd MMM yyyy") : "TBD")</td>
                             <td>
-                                @using (Html.BeginForm("BookUnit", "Client", FormMethod.Post))
-                                {
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="unitId" value="@u.UnitID" />
-                                    <button type="submit" class="btn-erp-primary" style="padding: 5px 14px; font-size: 12px;">
-                                        <i class="ti ti-home-check" aria-hidden="true"></i> Book
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <button type="button" class="btn-erp-secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 600;" data-toggle="modal" data-target="#viewUnitModal_@u.UnitID">
+                                        <i class="ti ti-eye" aria-hidden="true"></i> View
                                     </button>
-                                }
+                                    @if (u.CustomizationReady)
+                                    {
+                                        using (Html.BeginForm("BookUnit", "Client", FormMethod.Post, new { style = "display: inline;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="unitId" value="@u.UnitID" />
+                                            <button type="submit" class="btn-erp-primary" style="padding: 5px 12px; font-size: 12px;">
+                                                <i class="ti ti-home-check" aria-hidden="true"></i> Book
+                                            </button>
+                                        }
+                                    }
+                                     else
+                                     {
+                                         <button type="button" class="btn-erp-primary" style="padding: 5px 12px; font-size: 12px; opacity: 0.7; background-color: #64748b; border-color: #64748b;" onclick="showBookingLockedNotice()" title="Customization setup incomplete - Click for details">
+                                             <i class="ti ti-lock" aria-hidden="true"></i> Book
+                                         </button>
+                                     }
+                                </div>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
+        foreach (var u in Model)
+        {
+            <div class="modal fade" id="viewUnitModal_@u.UnitID" tabindex="-1" role="dialog" aria-labelledby="viewUnitModalLabel_@u.UnitID">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="border-radius: var(--radius-lg); border: none; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);">
+                        <div class="modal-header" style="background-color: var(--primary); color: #ffffff; padding: 18px 24px;">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #ffffff; opacity: 0.8;"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="viewUnitModalLabel_@u.UnitID" style="font-size: 16px; font-weight: 700; margin: 0;">Unit Details & Material Status</h4>
+                            <div style="font-size: 12.5px; opacity: 0.9; margin-top: 4px;">@u.ProjectName &mdash; @u.BuildingName, Flat @u.FlatNumber</div>
+                        </div>
+                        <div class="modal-body" style="padding: 24px; background-color: #f8fafc;">
+                            @if (u.CustomizationReady)
+                            {
+                                <div class="alert-erp alert-erp-success" style="margin-bottom: 20px;">
+                                    <i class="ti ti-circle-check" aria-hidden="true"></i>
+                                    <div>
+                                        <strong>Material Setup Completed:</strong> Project Manager has finalized finishing options and material specifications for this building. <strong>Booking is OPEN.</strong>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert-erp alert-erp-danger" style="margin-bottom: 20px;">
+                                    <i class="ti ti-clock" aria-hidden="true"></i>
+                                    <div>
+                                        <strong>Material Setup In Progress:</strong> Project Manager is currently assigning finishing materials & customization options for this project. <strong>Booking will OPEN once setup is completed.</strong>
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="erp-card" style="background: #ffffff; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 0;">
+                                <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Unit Specifications</h4>
+                                <div class="row" style="margin-bottom: 12px;">
+                                    <div class="col-md-6"><strong>Project:</strong> @u.ProjectName</div>
+                                    <div class="col-md-6"><strong>Building / Tower:</strong> @u.BuildingName</div>
+                                </div>
+                                <div class="row" style="margin-bottom: 12px;">
+                                    <div class="col-md-6"><strong>Flat #:</strong> @u.FlatNumber</div>
+                                    <div class="col-md-6"><strong>Floor Number:</strong> Floor @u.FloorNumber</div>
+                                </div>
+                                <div class="row" style="margin-bottom: 12px;">
+                                    <div class="col-md-6"><strong>Unit Size:</strong> @u.SizeSqFt.ToString("N0") SqFt</div>
+                                    <div class="col-md-6"><strong>Facing Direction:</strong> @u.Facing</div>
+                                </div>
+                                <div class="row" style="margin-bottom: 12px;">
+                                    <div class="col-md-6"><strong>Bedrooms:</strong> @u.BedroomCount</div>
+                                    <div class="col-md-6"><strong>Bathrooms:</strong> @u.BathroomCount @(u.AttachedBathrooms.HasValue && u.AttachedBathrooms.Value > 0 ? " (" + u.AttachedBathrooms.Value + " attached)" : "")</div>
+                                </div>
+                                <div class="row" style="margin-bottom: 12px;">
+                                    <div class="col-md-6"><strong>Kitchen:</strong> @(u.HasKitchen ? "Yes" : "No")</div>
+                                    <div class="col-md-6"><strong>Drawing/Living Hall:</strong> @(u.HasHall ? "Yes" : "No")</div>
+                                </div>
+                                <div class="row" style="margin-bottom: 12px;">
+                                    <div class="col-md-6"><strong>Balconies:</strong> @(u.BalconyCount.HasValue ? u.BalconyCount.ToString() : "0")</div>
+                                    <div class="col-md-6"><strong>Est. Project Completion:</strong> @(u.EstimatedCompletionDate.HasValue ? u.EstimatedCompletionDate.Value.ToString("dd MMM yyyy") : "TBD")</div>
+                                </div>
+                                <div class="row" style="margin-top: 16px; border-top: 1px dashed #e2e8f0; padding-top: 14px;">
+                                    <div class="col-md-12">
+                                        <div style="font-size: 15px; font-weight: 700; color: #2563eb;">Base Flat Price: Tk @u.BasePrice.ToString("N2")</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @{
+                                var unitCustomizationsDict = ViewBag.UnitCustomizations as Dictionary<int, List<Final.Models.CustomizableProduct>>;
+                                var uCustomizations = (unitCustomizationsDict != null && unitCustomizationsDict.ContainsKey(u.UnitID)) ? unitCustomizationsDict[u.UnitID] : new List<Final.Models.CustomizableProduct>();
+                                var allCategoryNames = ViewBag.CategoryNames as List<string> ?? new List<string>();
+                            }
+
+                            <div class="erp-card" style="background: #ffffff; padding: 20px; border: 1px solid #e2e8f0; margin-top: 16px; margin-bottom: 0;">
+                                <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 16px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                                    <span><i class="ti ti-palette" style="color: #2563eb; margin-right: 6px;"></i> Finishing Materials & Customizations</span>
+                                    @if (u.CustomizationReady)
+                                    {
+                                        <span class="status-pill status-Approved" style="font-size: 11px;">Setup Finalized</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-pill status-Pending" style="font-size: 11px;">Setup In Progress</span>
+                                    }
+                                </h4>
+
+                                @if (allCategoryNames.Any())
+                                {
+                                    var groups = uCustomizations.GroupBy(x => x.CategoryName).ToDictionary(g => g.Key);
+                                    foreach (var catName in allCategoryNames)
+                                    {
+                                        <div style="margin-bottom: 14px;">
+                                            <h5 style="font-size: 13.5px; font-weight: 700; color: #334155; margin: 0 0 6px 0;">@catName</h5>
+                                            @if (groups.ContainsKey(catName) && groups[catName].Any())
+                                            {
+                                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 14px;">
+                                                    @foreach (var p in groups[catName])
+                                                    {
+                                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #f1f5f9; font-size: 12.5px;">
+                                                            <div>
+                                                                <strong style="color: #0f172a;">@p.ProductName</strong>
+                                                                @if (!string.IsNullOrEmpty(p.Description))
+                                                                {
+                                                                    <span style="color: #64748b; margin-left: 6px;">(&mdash; @p.Description)</span>
+                                                                }
+                                                            </div>
+                                                            <div>
+                                                                @if (!p.IsCustomizableCategory)
+                                                                {
+                                                                    <span class="status-pill status-Approved" style="font-size: 10.5px;">Standard (Included)</span>
+                                                                }
+                                                                else if (p.IsDefaultOption || p.ExtraCost == 0)
+                                                                {
+                                                                    <span style="color: #16a34a; font-weight: 600; font-size: 12px;">Included (Default)</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span style="color: #b45309; font-weight: 600; font-size: 12px;">+Tk @((p.ExtraCost * u.SizeSqFt).ToString("N0")) <small style="color: #64748b; font-weight: 400;">(Tk @p.ExtraCost.ToString("N2")/sqft)</small></span>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div style="background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #64748b;">
+                                                    <i class="ti ti-clock" aria-hidden="true" style="margin-right: 4px;"></i> <em>Options Coming Soon &mdash; specifications for @catName are currently being configured by the Project Manager.</em>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p style="font-size: 13px; color: #64748b; margin: 0;">No material categories configured yet.</p>
+                                }
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="background-color: #ffffff; border-top: 1px solid #e2e8f0; padding: 14px 24px; display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
+                            <button type="button" class="btn-erp-secondary" data-dismiss="modal">Close</button>
+                            @if (u.CustomizationReady)
+                            {
+                                using (Html.BeginForm("BookUnit", "Client", FormMethod.Post, new { style = "display: inline;" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="unitId" value="@u.UnitID" />
+                                    <button type="submit" class="btn-erp-primary">
+                                        <i class="ti ti-home-check" aria-hidden="true"></i> Proceed to Book
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <button type="button" class="btn-erp-primary" style="opacity: 0.7; background-color: #64748b; border-color: #64748b;" onclick="showBookingLockedNotice()">
+                                    <i class="ti ti-lock" aria-hidden="true"></i> Book (Locked)
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
     }
     else
     {
@@ -73,6 +247,10 @@
 
 @section scripts {
     <script>
+        function showBookingLockedNotice() {
+            alert("Booking is currently locked!\n\nThe customization options for this unit have not been fully completed by the Project Manager. You will be able to book once material setup is complete.");
+        }
+
         function applyUnitFilters() {
             var searchText = document.getElementById('unitSearchBox').value.toLowerCase();
             var rows = document.querySelectorAll('table.req-table tbody tr');

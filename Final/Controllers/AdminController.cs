@@ -309,7 +309,7 @@ namespace Final.Controllers
         private List<SelectListItem> GetCategoryOptions()
         {
             DataTable table = DbHelper.QueryTable(
-                "SELECT CategoryID, CategoryName FROM MasterCategories ORDER BY CategoryName");
+                "SELECT CategoryID, CategoryName FROM MasterCategories ORDER BY CategoryID DESC");
 
             var options = new List<SelectListItem>();
             foreach (DataRow row in table.Rows)
@@ -446,7 +446,7 @@ namespace Final.Controllers
                          p.Category, p.IsApprovedForClientCustomization, mc.CategoryName, p.ExtraCost
                   FROM Products p
                   LEFT JOIN MasterCategories mc ON mc.CategoryID = p.CategoryID
-                  ORDER BY p.IsApprovedForClientCustomization DESC, p.ProductID DESC");
+                  ORDER BY p.ProductID DESC");
 
             var rows = new List<CustomizationCatalogRow>();
             foreach (DataRow row in table.Rows)
@@ -464,7 +464,7 @@ namespace Final.Controllers
             }
 
             DataTable categoryTable = DbHelper.QueryTable(
-                "SELECT CategoryName FROM MasterCategories ORDER BY CategoryName");
+                "SELECT CategoryName FROM MasterCategories ORDER BY CategoryID DESC");
 
             var categoryOptions = new List<string>();
             foreach (DataRow row in categoryTable.Rows)
@@ -628,7 +628,7 @@ namespace Final.Controllers
                 @"SELECT p.ProjectID, p.ProjectName,
                          ISNULL((SELECT SUM(cp.Amount) FROM ClientPayments cp WHERE cp.ProjectID = p.ProjectID), 0) AS TotalClientPayments
                   FROM Projects p
-                  ORDER BY p.ProjectName");
+                  ORDER BY p.ProjectID DESC");
 
             foreach (DataRow row in table.Rows)
             {
@@ -681,7 +681,7 @@ namespace Final.Controllers
 
             // Populate PM dropdown options
             DataTable pmTable = DbHelper.QueryTable(
-                "SELECT UserID, FullName FROM Users WHERE Role = 'Project Manager' AND IsActive = 1 ORDER BY FullName");
+                "SELECT UserID, FullName FROM Users WHERE Role = 'Project Manager' AND IsActive = 1 ORDER BY UserID DESC");
             model.ProjectManagerOptions.Add(new SelectListItem { Value = "", Text = "-- Select Project Manager --" });
             foreach (DataRow r in pmTable.Rows)
             {
@@ -694,7 +694,7 @@ namespace Final.Controllers
 
             // Populate Accounts Officer dropdown options
             DataTable aoTable = DbHelper.QueryTable(
-                "SELECT UserID, FullName FROM Users WHERE Role = 'Accounts Officer' AND IsActive = 1 ORDER BY FullName");
+                "SELECT UserID, FullName FROM Users WHERE Role = 'Accounts Officer' AND IsActive = 1 ORDER BY UserID DESC");
             model.AccountOfficerOptions.Add(new SelectListItem { Value = "", Text = "-- Select Accounts Officer --" });
             foreach (DataRow r in aoTable.Rows)
             {

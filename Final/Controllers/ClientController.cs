@@ -70,18 +70,79 @@ namespace Final.Controllers
             DataTable table = DbHelper.QueryTable(
                 @"SELECT u.UnitID, u.BuildingID, b.BuildingName, u.ProjectID, p.ProjectName,
                          u.FlatNumber, u.FloorNumber, u.SizeSqFt, u.BedroomCount, u.BathroomCount, u.AttachedBathrooms,
-                         u.HasKitchen, u.HasHall, u.BalconyCount, u.Facing, u.BasePrice, u.Status, p.EstimatedCompletionDate
+                         u.HasKitchen, u.HasHall, u.BalconyCount, u.Facing, u.BasePrice, u.Status, p.EstimatedCompletionDate,
+                         " + UnitReadySql + @" AS CustomizationReady
                   FROM Units u
                   JOIN Buildings b ON b.BuildingID = u.BuildingID
                   JOIN Projects p ON p.ProjectID = u.ProjectID
                   WHERE u.Status = 'Available'
-                  ORDER BY p.ProjectName, b.BuildingName, u.FlatNumber");
+                  ORDER BY u.UnitID DESC");
 
             var units = new List<UnitModel>();
             foreach (DataRow row in table.Rows)
                 units.Add(UnitController.MapUnit(row));
 
+            var unitCustomizations = new Dictionary<int, List<CustomizableProduct>>();
+            foreach (var u in units)
+            {
+                unitCustomizations[u.UnitID] = GetAvailableCustomizationsForScope(u.ProjectID, u.BuildingID);
+            }
+            ViewBag.UnitCustomizations = unitCustomizations;
+
+            var categoryNames = new List<string>();
+            foreach (DataRow r in DbHelper.QueryTable("SELECT CategoryName FROM MasterCategories ORDER BY CategoryID DESC").Rows)
+                categoryNames.Add(r["CategoryName"].ToString());
+            ViewBag.CategoryNames = categoryNames;
+
             return View(units);
+        }
+
+        private List<CustomizableProduct> GetAvailableCustomizationsForScope(int projectId, int buildingId)
+        {
+            DataTable table = DbHelper.QueryTable(
+                @"SELECT pr.ProductID, pr.ProductName, pr.Description, pr.Price,
+                         pr.IsDefaultOption, pr.ExtraCost, mc.CategoryName, mc.IsCustomizable
+                  FROM Products pr
+                  JOIN MasterCategories mc ON mc.CategoryID = pr.CategoryID
+                  CROSS APPLY (SELECT CASE WHEN (pr.Category = 'Customizable' OR mc.IsCustomizable = 1) AND pr.IsApprovedForClientCustomization = 1
+                                            AND EXISTS (SELECT 1 FROM ProductScopeAssignments a
+                                                        WHERE a.ProductID = pr.ProductID
+                                                          AND (a.BuildingID = @BuildingID
+                                                               OR (a.ProjectID = @ProjectID AND a.BuildingID IS NULL)))
+                                       THEN 1 ELSE 0 END AS Offered) o
+                  WHERE (mc.IsCustomizable = 0 AND pr.ProductID =
+                            (SELECT TOP 1 a.ProductID
+                             FROM ProductScopeAssignments a
+                             JOIN Products x ON x.ProductID = a.ProductID
+                             WHERE x.CategoryID = pr.CategoryID
+                               AND (a.BuildingID = @BuildingID
+                                    OR (a.ProjectID = @ProjectID AND a.BuildingID IS NULL)
+                                    OR (a.ProjectID IS NULL AND a.BuildingID IS NULL))
+                             ORDER BY CASE WHEN a.BuildingID = @BuildingID THEN 1
+                                           WHEN a.ProjectID = @ProjectID THEN 2
+                                           ELSE 3 END,
+                                      a.ProductID DESC))
+                         OR (mc.IsCustomizable = 1 AND o.Offered = 1)
+                  ORDER BY mc.CategoryID DESC, pr.ProductID DESC",
+                new SqlParameter("@ProjectID", projectId),
+                new SqlParameter("@BuildingID", buildingId));
+
+            var list = new List<CustomizableProduct>();
+            foreach (DataRow row in table.Rows)
+            {
+                list.Add(new CustomizableProduct
+                {
+                    ProductID = (int)row["ProductID"],
+                    ProductName = row["ProductName"].ToString(),
+                    Description = row["Description"] == DBNull.Value ? null : row["Description"].ToString(),
+                    Price = (decimal)row["Price"],
+                    IsDefaultOption = (bool)row["IsDefaultOption"],
+                    ExtraCost = (decimal)row["ExtraCost"],
+                    CategoryName = row["CategoryName"].ToString(),
+                    IsCustomizableCategory = (bool)row["IsCustomizable"]
+                });
+            }
+            return list;
         }
 
         [HttpPost]
@@ -93,15 +154,21 @@ namespace Final.Controllers
 
             int clientUserId = (int)Session["UserID"];
 
-            // Claim the unit atomically: only proceed if it is still Available.
-            // (Status is flipped to Booked; the WHERE guards against a double-booking race.)
+            // Claim the unit atomically: only proceed if it is still Available and PM setup is complete.
             DataRow unit = DbHelper.QuerySingleRow(
-                "SELECT BasePrice FROM Units WHERE UnitID = @UnitID AND Status = 'Available'",
+                @"SELECT u.BasePrice, " + UnitReadySql + @" AS CustomizationReady
+                  FROM Units u WHERE u.UnitID = @UnitID AND u.Status = 'Available'",
                 new SqlParameter("@UnitID", unitId));
 
             if (unit == null)
             {
                 TempData["Error"] = "That unit is no longer available.";
+                return RedirectToAction("Units");
+            }
+
+            if (Convert.ToInt32(unit["CustomizationReady"]) != 1)
+            {
+                TempData["Error"] = "Booking is locked for this unit until the Project Manager completes the material and customization setup.";
                 return RedirectToAction("Units");
             }
 
@@ -117,18 +184,15 @@ namespace Final.Controllers
 
             decimal basePrice = (decimal)unit["BasePrice"];
 
-            object newId = DbHelper.ExecuteScalar(
+            DbHelper.Execute(
                 @"INSERT INTO UnitBookings (UnitID, ClientUserID, TotalPrice)
-                  OUTPUT INSERTED.BookingID
                   VALUES (@UnitID, @ClientUserID, @TotalPrice)",
                 new SqlParameter("@UnitID", unitId),
                 new SqlParameter("@ClientUserID", clientUserId),
                 new SqlParameter("@TotalPrice", basePrice));
 
-            int bookingId = Convert.ToInt32(newId);
-
-            // Send them straight to My Bookings with the new booking's Customize modal open.
-            return RedirectToAction("MyBookings", new { openCustomize = bookingId });
+            TempData["Success"] = "Unit booked successfully! You can view and manage your booking in My Bookings.";
+            return RedirectToAction("MyBookings");
         }
 
         // ---------- My bookings ----------
@@ -327,7 +391,7 @@ namespace Final.Controllers
                                            ELSE 3 END,
                                       a.ProductID))
                          OR (mc.IsCustomizable = 1 AND (o.Offered = 1 OR (cs.SelectionID IS NOT NULL AND cs.Status <> 'Rejected')))
-                  ORDER BY mc.CategoryName, pr.ProductName",
+                  ORDER BY mc.CategoryID DESC, pr.ProductID DESC",
                 new SqlParameter("@BookingID", bookingId),
                 new SqlParameter("@ProjectID", (int)booking["ProjectID"]),
                 new SqlParameter("@BuildingID", (int)booking["BuildingID"]));
@@ -354,7 +418,7 @@ namespace Final.Controllers
                 });
             }
 
-            foreach (DataRow row in DbHelper.QueryTable("SELECT CategoryName FROM MasterCategories ORDER BY CategoryName").Rows)
+            foreach (DataRow row in DbHelper.QueryTable("SELECT CategoryName FROM MasterCategories ORDER BY CategoryID DESC").Rows)
                 model.CategoryNames.Add(row["CategoryName"].ToString());
 
             return model;
@@ -574,7 +638,7 @@ namespace Final.Controllers
         private List<ClientBookingBreakdownModel> GetClientBookingBreakdown(int clientUserId)
         {
             DataTable table = DbHelper.QueryTable(
-                @"SELECT b.BookingID, p.ProjectName, u.FlatNumber, b.TotalPrice,
+                @"SELECT b.BookingID, p.ProjectName, bl.BuildingName, u.FlatNumber, b.TotalPrice,
                          ISNULL((SELECT SUM(cp.Amount) FROM ClientPayments cp WHERE cp.BookingID = b.BookingID), 0) AS Paid,
                          (SELECT ISNULL(SUM(pr.ExtraCost), 0) * u.SizeSqFt
                             FROM CustomizationSelections cs
@@ -584,8 +648,10 @@ namespace Final.Controllers
                               AND mc.IsCustomizable = 1) AS ExtraTotal
                   FROM UnitBookings b
                   JOIN Units u ON u.UnitID = b.UnitID
+                  JOIN Buildings bl ON bl.BuildingID = u.BuildingID
                   JOIN Projects p ON p.ProjectID = u.ProjectID
-                  WHERE b.ClientUserID = @ClientUserID AND b.Status = 'Active'",
+                  WHERE b.ClientUserID = @ClientUserID AND b.Status = 'Active'
+                  ORDER BY b.BookingID DESC",
                 new SqlParameter("@ClientUserID", clientUserId));
 
             var breakdown = new List<ClientBookingBreakdownModel>();
@@ -595,6 +661,7 @@ namespace Final.Controllers
                 {
                     BookingID = (int)row["BookingID"],
                     ProjectName = row["ProjectName"].ToString(),
+                    BuildingName = row["BuildingName"].ToString(),
                     FlatNumber = row["FlatNumber"].ToString(),
                     TotalPrice = (decimal)row["TotalPrice"],
                     ExtraTotal = (decimal)row["ExtraTotal"],
@@ -620,10 +687,11 @@ namespace Final.Controllers
             ViewBag.BookingBreakdown = breakdown;
 
             DataTable table = DbHelper.QueryTable(
-                @"SELECT cp.ClientPaymentID, cp.PaymentDate, p.ProjectName, u.FlatNumber, cp.Amount
+                @"SELECT cp.ClientPaymentID, cp.PaymentDate, p.ProjectName, bl.BuildingName, u.FlatNumber, cp.Amount
                   FROM ClientPayments cp
                   JOIN UnitBookings b ON b.BookingID = cp.BookingID
                   JOIN Units u ON u.UnitID = b.UnitID
+                  JOIN Buildings bl ON bl.BuildingID = u.BuildingID
                   JOIN Projects p ON p.ProjectID = u.ProjectID
                   WHERE b.ClientUserID = @ClientUserID
                   ORDER BY cp.ClientPaymentID DESC",
@@ -637,6 +705,7 @@ namespace Final.Controllers
                     PaymentID = (int)row["ClientPaymentID"],
                     PaymentDate = (DateTime)row["PaymentDate"],
                     ProjectName = row["ProjectName"].ToString(),
+                    BuildingName = row["BuildingName"].ToString(),
                     FlatNumber = row["FlatNumber"].ToString(),
                     Amount = (decimal)row["Amount"]
                 });

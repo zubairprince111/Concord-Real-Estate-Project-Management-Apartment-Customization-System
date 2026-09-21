@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -47,7 +47,7 @@ namespace Final.Controllers
                 }
 
                 DataTable table = DbHelper.QueryTable(
-                    "SELECT ProjectID, ProjectName, Location, Budget, StartDate, EstimatedCompletionDate, Status, MaxBuildings, TotalAreaSqFt FROM Projects ORDER BY ProjectName");
+                    "SELECT ProjectID, ProjectName, Location, Budget, StartDate, EstimatedCompletionDate, Status, MaxBuildings, TotalAreaSqFt FROM Projects ORDER BY ProjectID DESC");
                 // Include Status for ALL projects (not just Active) here, since visitors may ask
                 // about completed or upcoming projects too -- the AI can explain the status itself.
 
