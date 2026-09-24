@@ -574,7 +574,62 @@
             font-style: italic;
         }
 
-
+        /* Mobile Media Queries for Landing Page */
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow-y: auto;
+            }
+            .navbar-public {
+                padding: 0 20px;
+            }
+            .navbar-public .nav-links {
+                gap: 16px;
+            }
+            .hero {
+                flex-direction: column;
+                padding-top: 90px;
+                padding-bottom: 30px;
+                min-height: 100vh;
+            }
+            .hero-content {
+                margin-top: 20px;
+                max-width: 100%;
+            }
+            .hero-script {
+                display: none;
+            }
+            .hero-stats {
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+            .roles-container {
+                position: relative;
+                bottom: auto;
+                margin-top: 30px;
+                flex-wrap: wrap;
+                padding: 0 16px;
+            }
+            .role-card {
+                min-width: 100%;
+            }
+            .footer-overlay {
+                position: relative;
+                flex-direction: column;
+                gap: 6px;
+                text-align: center;
+                margin-top: 20px;
+            }
+            .chat-panel {
+                width: calc(100vw - 32px);
+                right: 16px;
+                bottom: 84px;
+            }
+            .chat-toggle-btn::before {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
