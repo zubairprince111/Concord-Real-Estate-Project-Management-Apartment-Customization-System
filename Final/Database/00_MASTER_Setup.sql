@@ -19,8 +19,8 @@
         accounts@concord.test        / Test@123   (Accounts Officer)
 */
 
-USE Concord_Practicum;
-GO
+-- Database table creation script (runs inside current database context)
+
 
 -- ============================================================
 -- 1. Users
