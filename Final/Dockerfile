@@ -1,10 +1,13 @@
 # Dockerfile for ASP.NET 4.7.2 MVC application deployment on Render
-FROM mono:latest
+FROM ubuntu:22.04
 
+ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
-# Update apt and install mono-xsp4 web server
-RUN apt-get update && apt-get install -y --no-install-recommends mono-xsp4 && rm -rf /var/lib/apt/lists/*
+# Install Mono runtime, libraries and mono-xsp4 web server
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends mono-complete mono-xsp4 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy all project files into container
 COPY . /app
