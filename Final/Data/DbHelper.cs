@@ -16,7 +16,7 @@ namespace Final.Data
 
             if (!string.IsNullOrWhiteSpace(envConn))
             {
-                return envConn;
+                return envConn.Trim('"', '\'', ' ');
             }
 
             return ConfigurationManager.ConnectionStrings["ConcordDB"]?.ConnectionString;
