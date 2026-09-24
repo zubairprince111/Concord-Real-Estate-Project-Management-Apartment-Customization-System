@@ -6,8 +6,21 @@ namespace Final.Data
 {
     public static class DbHelper
     {
-        private static readonly string ConnectionString =
-            ConfigurationManager.ConnectionStrings["ConcordDB"].ConnectionString;
+        private static string ConnectionString => GetConnectionString();
+
+        private static string GetConnectionString()
+        {
+            string envConn = System.Environment.GetEnvironmentVariable("ConcordDB")
+                ?? System.Environment.GetEnvironmentVariable("SQLCONNSTR_ConcordDB")
+                ?? System.Environment.GetEnvironmentVariable("CUSTOMCONNSTR_ConcordDB");
+
+            if (!string.IsNullOrWhiteSpace(envConn))
+            {
+                return envConn;
+            }
+
+            return ConfigurationManager.ConnectionStrings["ConcordDB"]?.ConnectionString;
+        }
 
         public static DataRow QuerySingleRow(string sql, params SqlParameter[] parameters)
         {
